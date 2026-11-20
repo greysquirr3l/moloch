@@ -1,6 +1,6 @@
 # Language Profiles
 
-Wiggum ships with built-in profiles for 11 programming languages. Each profile provides sensible defaults for build commands, test patterns, documentation style, error handling conventions, security rules, and a vulnerability audit command.
+Moloch ships with built-in profiles for 11 programming languages. Each profile provides sensible defaults for build commands, test patterns, documentation style, error handling conventions, security rules, and a vulnerability audit command.
 
 ## Supported languages
 

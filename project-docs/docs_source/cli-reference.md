@@ -1,23 +1,23 @@
 # CLI Reference
 
-## `wiggum init`
+## `moloch init`
 
 Interactively create a new plan file.
 
 ```bash
-wiggum init [--plan <path>]
+moloch init [--plan <path>]
 ```
 
 | Option         | Description                                                  |
 | -------------- | ------------------------------------------------------------ |
 | `--plan`, `-p` | Path to write the generated plan TOML (default: `plan.toml`) |
 
-## `wiggum generate`
+## `moloch generate`
 
 Generate all artifacts from a plan file.
 
 ```bash
-wiggum generate <plan> [OPTIONS]
+moloch generate <plan> [OPTIONS]
 ```
 
 | Option                                                  | Description                                                                                                         |
@@ -32,12 +32,12 @@ wiggum generate <plan> [OPTIONS]
 | `--no-summary`                                          | Suppress the plan quality scorecard printed after generation                                                        |
 | `--thin`                                                | Universal artifacts only — skip every per-tool prompt directory (`.vscode/`, `.opencode/`, `.claude/`, agent_rules) |
 
-## `wiggum check`
+## `moloch check`
 
-Score the quality of a plan file before generating. Unlike `validate --lint`, which checks structural correctness, `check` scores the _substance_ of a plan on seven dimensions and produces concrete improvement suggestions. The same score is now printed at the end of `wiggum generate` so the quality signal lands at the moment it matters most — right after scaffolding. Pass `--no-summary` to suppress it.
+Score the quality of a plan file before generating. Unlike `validate --lint`, which checks structural correctness, `check` scores the _substance_ of a plan on seven dimensions and produces concrete improvement suggestions. The same score is now printed at the end of `moloch generate` so the quality signal lands at the moment it matters most — right after scaffolding. Pass `--no-summary` to suppress it.
 
 ```bash
-wiggum check <plan> [--json]
+moloch check <plan> [--json]
 ```
 
 | Option   | Description                                           |
@@ -57,21 +57,21 @@ The seven scoring dimensions are:
 | **Harness complexity** | Whether the evaluator harness matches plan scale — penalises over-engineered harnesses on tiny plans and rewards high criteria coverage |
 | **Verifiability**      | Share of tasks with at least one `verify` command                                                                                       |
 
-Each dimension scores 0–10. The overall score is a weighted composite. Plans scoring **≥ 7** are considered healthy; `wiggum check` exits with a non-zero status if the plan is below this threshold.
+Each dimension scores 0–10. The overall score is a weighted composite. Plans scoring **≥ 7** are considered healthy; `moloch check` exits with a non-zero status if the plan is below this threshold.
 
 Run `check` before `generate` to catch low-quality plans early:
 
 ```bash
-wiggum check plan.toml
-wiggum check plan.toml --json
+moloch check plan.toml
+moloch check plan.toml --json
 ```
 
-## `wiggum validate`
+## `moloch validate`
 
 Validate a plan file without generating artifacts.
 
 ```bash
-wiggum validate <plan> [--lint]
+moloch validate <plan> [--lint]
 ```
 
 | Option   | Description                          |
@@ -79,20 +79,20 @@ wiggum validate <plan> [--lint]
 | `<plan>` | Path to the plan TOML file           |
 | `--lint` | Run lint rules to check plan quality |
 
-## `wiggum add-task`
+## `moloch add-task`
 
 Add a task to an existing plan file interactively.
 
 ```bash
-wiggum add-task <plan>
+moloch add-task <plan>
 ```
 
-## `wiggum bootstrap`
+## `moloch bootstrap`
 
 Bootstrap a plan from an existing project directory. Detects language, build system, and project structure.
 
 ```bash
-wiggum bootstrap [path] [OPTIONS]
+moloch bootstrap [path] [OPTIONS]
 ```
 
 | Option           | Description                                                         |
@@ -101,12 +101,12 @@ wiggum bootstrap [path] [OPTIONS]
 | `--output`, `-o` | Path to write the generated plan TOML (default: `<path>/plan.toml`) |
 | `--force`        | Overwrite existing plan file without prompting                      |
 
-## `wiggum reverse`
+## `moloch reverse`
 
 Clone a remote git repo into a tempdir and generate a `plan.toml` skeleton from its contents. Optionally merge a hints file (TOML for structured overrides, Markdown for freeform rules) and/or run an LLM pass to produce intelligent phases + tasks.
 
 ```bash
-wiggum reverse <url> [OPTIONS]
+moloch reverse <url> [OPTIONS]
 ```
 
 | Option           | Description                                                                                                                   |
@@ -126,68 +126,68 @@ Examples:
 
 ```bash
 # Deterministic, no LLM
-wiggum reverse https://github.com/foo/bar --hints hints.toml
+moloch reverse https://github.com/foo/bar --hints hints.toml
 
 # Scope to a monorepo subpackage
-wiggum reverse https://github.com/foo/bar/tree/main/services/api --hints hints.md
+moloch reverse https://github.com/foo/bar/tree/main/services/api --hints hints.md
 
 # LLM-driven phase decomposition (Anthropic Claude)
-ANTHROPIC_API_KEY=sk-... wiggum reverse https://github.com/foo/bar --llm anthropic
+ANTHROPIC_API_KEY=sk-... moloch reverse https://github.com/foo/bar --llm anthropic
 
 # LLM-driven (MiniMax)
-MINIMAX_API_KEY=... wiggum reverse https://github.com/foo/bar --llm minimax
+MINIMAX_API_KEY=... moloch reverse https://github.com/foo/bar --llm minimax
 
 # Pick a specific MiniMax model
-wiggum reverse https://github.com/foo/bar --llm minimax --llm-model MiniMax-M2.7-highspeed
+moloch reverse https://github.com/foo/bar --llm minimax --llm-model MiniMax-M2.7-highspeed
 ```
 
-The hints TOML supports `[project]`, `[orchestrator]`, and `[[phase]]` blocks. See [reference/example-hints.toml](https://github.com/greysquirr3l/wiggum/blob/main/reference/example-hints.toml) for the full schema, and [reference/example-hints.md](https://github.com/greysquirr3l/wiggum/blob/main/reference/example-hints.md) for the Markdown variant.
+The hints TOML supports `[project]`, `[orchestrator]`, and `[[phase]]` blocks. See [reference/example-hints.toml](https://github.com/greysquirr3l/moloch/blob/main/reference/example-hints.toml) for the full schema, and [reference/example-hints.md](https://github.com/greysquirr3l/moloch/blob/main/reference/example-hints.md) for the Markdown variant.
 
 When `--llm` is set, the deterministic skeleton is replaced by an LLM-generated phase decomposition. The LLM receives the detected language, manifest, top-level tree, README excerpt, and your hints; it returns a JSON plan that we validate and merge. The LLM pass honours any phases you declared in your hints TOML — your structure wins over the model's.
 
-## `wiggum serve`
+## `moloch serve`
 
 Start the MCP server for agent integration.
 
 ```bash
-wiggum serve --mcp
+moloch serve --mcp
 ```
 
-## `wiggum version`
+## `moloch version`
 
 Show the CLI version and embedded git SHA.
 
 ```bash
-wiggum version
+moloch version
 ```
 
 Output format:
 
 ```text
-wiggum <version> (<sha|unknown>)
+moloch <version> (<sha|unknown>)
 ```
 
-## `wiggum retro`
+## `moloch retro`
 
 Analyse a completed `PROGRESS.md` and emit retrospective improvement suggestions.
 
 ```bash
-wiggum retro [OPTIONS]
+moloch retro [OPTIONS]
 ```
 
 | Option       | Description                                                           |
 | ------------ | --------------------------------------------------------------------- |
 | `--progress` | Path to `PROGRESS.md` (default: `PROGRESS.md`)                        |
 | `--plan`     | Path to the plan TOML (used to correlate task slugs)                  |
-| `--save`     | Save the retrospective as a reusable pattern in `~/.wiggum/patterns/` |
+| `--save`     | Save the retrospective as a reusable pattern in `~/.moloch/patterns/` |
 
-## `wiggum replan`
+## `moloch replan`
 
 Re-generate a single task file after a failure. Reads the current plan and any failure
 evidence recorded in `PROGRESS.md`, then re-renders the task's `.md` file with augmented hints.
 
 ```bash
-wiggum replan <plan> --task <slug> [--dry-run]
+moloch replan <plan> --task <slug> [--dry-run]
 ```
 
 | Option         | Description                                                |
@@ -200,13 +200,13 @@ Failure evidence is extracted from lines in `PROGRESS.md` that are tagged `[~]` 
 "required fix". Extracted lines are prepended as `[Previous failure]` hints in the regenerated
 task file so the subagent has full context for the retry.
 
-## `wiggum patterns`
+## `moloch patterns`
 
-Manage the local pattern store (`~/.wiggum/patterns/`). Patterns are reusable TOML files derived
+Manage the local pattern store (`~/.moloch/patterns/`). Patterns are reusable TOML files derived
 from retrospectives that can be applied as hint augmentations to future plans.
 
 ```bash
-wiggum patterns <action> [OPTIONS]
+moloch patterns <action> [OPTIONS]
 ```
 
 ### `list`
@@ -214,7 +214,7 @@ wiggum patterns <action> [OPTIONS]
 List all saved patterns.
 
 ```bash
-wiggum patterns list
+moloch patterns list
 ```
 
 ### `save`
@@ -222,7 +222,7 @@ wiggum patterns list
 Save a pattern from a PROGRESS.md file (or an existing retro output).
 
 ```bash
-wiggum patterns save --from <progress-path> --plan <plan-path>
+moloch patterns save --from <progress-path> --plan <plan-path>
 ```
 
 | Option   | Description                                        |
@@ -235,19 +235,19 @@ wiggum patterns save --from <progress-path> --plan <plan-path>
 Apply matching patterns as additional hints to a plan file. Patterns are matched by language.
 
 ```bash
-wiggum patterns apply --plan <plan-path>
+moloch patterns apply --plan <plan-path>
 ```
 
 | Option   | Description                      |
 | -------- | -------------------------------- |
 | `--plan` | Path to the plan TOML to augment |
 
-## `wiggum report`
+## `moloch report`
 
 Generate a post-execution report from `PROGRESS.md`.
 
 ```bash
-wiggum report [OPTIONS]
+moloch report [OPTIONS]
 ```
 
 | Option          | Description                                    |
@@ -255,12 +255,12 @@ wiggum report [OPTIONS]
 | `--progress`    | Path to `PROGRESS.md` (default: `PROGRESS.md`) |
 | `--project-dir` | Project directory for git timeline (optional)  |
 
-## `wiggum watch`
+## `moloch watch`
 
 Watch `PROGRESS.md` for live progress updates.
 
 ```bash
-wiggum watch [OPTIONS]
+moloch watch [OPTIONS]
 ```
 
 | Option         | Description                                                                                          |

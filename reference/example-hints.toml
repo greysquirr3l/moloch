@@ -1,12 +1,12 @@
-# example-hints.toml — hints file for `wiggum reverse`
+# example-hints.toml — hints file for `moloch reverse`
 #
-# Pass this file with `wiggum reverse <url> --hints example-hints.toml` to
+# Pass this file with `moloch reverse <url> --hints example-hints.toml` to
 # override what the bootstrap scan detected and seed the plan with your own
 # phases + tasks.
 #
 # Field names use kebab-case (TOML convention). Everything in this file is
 # optional — supply only what you want to override. Missing fields fall back
-# to whatever `wiggum reverse` detected from the source repo.
+# to whatever `moloch reverse` detected from the source repo.
 
 # ─── Project overrides ────────────────────────────────────────────────────────
 # Override detected language / architecture / name / description.

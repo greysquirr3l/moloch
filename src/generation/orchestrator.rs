@@ -4,7 +4,7 @@ use crate::domain::{
     dag,
     plan::{Plan, ResolvedTask},
 };
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 use crate::generation::stop_section::insert_stop_section;
 use crate::generation::templates::get_tera;
 
@@ -84,7 +84,7 @@ pub fn render_with(tera: &Tera, plan: &Plan, tasks: &[ResolvedTask]) -> Result<S
     ctx.insert("contract_review", &contract_review);
 
     tera.render("orchestrator.md", &ctx)
-        .map_err(|e| WiggumError::Template(e.to_string()))
+        .map_err(|e| MolochError::Template(e.to_string()))
 }
 
 /// Expose each task's `verify` commands so step 8 can name them.
@@ -179,7 +179,7 @@ pub fn render_opencode_with(tera: &Tera, plan: &Plan, tasks: &[ResolvedTask]) ->
     ctx.insert("parallel_groups", &groups_value);
 
     tera.render("orchestrator_opencode.md", &ctx)
-        .map_err(|e| WiggumError::Template(e.to_string()))
+        .map_err(|e| MolochError::Template(e.to_string()))
 }
 
 /// Render the root-level `ORCHESTRATOR.md` workflow reference document.
@@ -246,7 +246,7 @@ pub fn render_orchestrator_root_with(
     // a wrong path would send people to a non-existent file.
 
     tera.render("orchestrator_root.md", &ctx).map_err(|e| {
-        WiggumError::Template(format!("Failed to render 'orchestrator_root.md': {e:?}"))
+        MolochError::Template(format!("Failed to render 'orchestrator_root.md': {e:?}"))
     })
 }
 

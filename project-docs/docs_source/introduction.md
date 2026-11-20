@@ -1,10 +1,10 @@
 # Introduction
 
-**Wiggum** is a CLI tool and MCP server that generates structured task files for autonomous AI coding workflows. It codifies a dependency-aware orchestration pattern — an orchestrator agent that drives subagents through a dependency-ordered task list until an entire project is implemented, hands-off.
+**Moloch** is a CLI tool and MCP server that generates structured task files for autonomous AI coding workflows. It codifies a dependency-aware orchestration pattern — an orchestrator agent that drives subagents through a dependency-ordered task list until an entire project is implemented, hands-off.
 
 ## What it does
 
-Given a structured plan definition (TOML), Wiggum produces:
+Given a structured plan definition (TOML), Moloch produces:
 
 - **Task files** (`tasks/T{NN}-{slug}.md`) — Structured markdown specs with goals, dependencies, implementation guidance, test requirements, preflight commands, and exit criteria
 - **Progress tracker** (`PROGRESS.md`) — A phase/task table with status tracking and learnings
@@ -23,8 +23,8 @@ Setting up an AI orchestration loop currently requires hand-authoring all of the
 
 ## Design principles
 
-- **Agent-agnostic** — Wiggum generates artifacts, not agent invocations. Works with any AI coding tool that can read markdown.
-- **Scaffold, don't execute** — Wiggum produces plans and task files. Execution is someone else's job.
+- **Agent-agnostic** — Moloch generates artifacts, not agent invocations. Works with any AI coding tool that can read markdown.
+- **Scaffold, don't execute** — Moloch produces plans and task files. Execution is someone else's job.
 - **Language-aware** — Ships with profiles for Rust, Go, TypeScript, Python, Java, C#, Kotlin, Swift, Ruby, Elixir, and PHP — providing sensible defaults for build, test, lint, and security audit commands.
 - **Security by default** — Six OWASP-derived rules are injected into every task and orchestrator prompt automatically. Supply-chain audits run on every task completion. Plans with web-facing surface get an auto-appended security hardening task with verifiable exit criteria. None of this requires configuration.
 - **Multi-target** — A single plan can emit artifacts for VSCode + Copilot, opencode, Claude Code, and Cursor / Windsurf / GitHub Copilot simultaneously. Each target gets the file format and agent conventions that IDE expects.

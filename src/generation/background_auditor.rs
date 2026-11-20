@@ -5,7 +5,7 @@
 use tera::{Context, Tera};
 
 use crate::domain::plan::Plan;
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 use crate::generation::templates::get_tera;
 
 /// Render the `VSCode` background auditor prompt using the default `Tera` instance.
@@ -34,7 +34,7 @@ pub fn render_with(tera: &Tera, plan: &Plan) -> Result<String> {
     ctx.insert("preflight_lint", &plan.preflight.lint);
 
     tera.render("background_auditor.md", &ctx)
-        .map_err(|e| WiggumError::Template(e.to_string()))
+        .map_err(|e| MolochError::Template(e.to_string()))
 }
 
 /// Render the opencode background auditor subagent prompt (`background-auditor.md`).
@@ -63,7 +63,7 @@ pub fn render_opencode_with(tera: &Tera, plan: &Plan) -> Result<String> {
     ctx.insert("preflight_lint", &plan.preflight.lint);
 
     tera.render("background_auditor_opencode.md", &ctx)
-        .map_err(|e| WiggumError::Template(e.to_string()))
+        .map_err(|e| MolochError::Template(e.to_string()))
 }
 
 #[cfg(test)]

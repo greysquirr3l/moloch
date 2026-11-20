@@ -4,7 +4,7 @@ use clap::{Parser, Subcommand};
 
 #[derive(Debug, Parser)]
 #[command(
-    name = "wiggum",
+    name = "moloch",
     about = "Agentic implementation scaffold generator for dependency-aware AI coding workflows"
 )]
 pub struct Cli {
@@ -177,7 +177,7 @@ pub enum Command {
         api_key: Option<String>,
     },
 
-    /// Remove all wiggum-generated artifacts from a project
+    /// Remove all moloch-generated artifacts from a project
     Clean {
         /// Path to the plan TOML file
         plan: PathBuf,
@@ -233,7 +233,7 @@ pub enum Command {
         #[arg(long, default_value = "plan.toml")]
         plan: PathBuf,
 
-        /// Save extracted patterns to the global patterns store (~/.wiggum/patterns/)
+        /// Save extracted patterns to the global patterns store (~/.moloch/patterns/)
         #[arg(long)]
         save: bool,
     },

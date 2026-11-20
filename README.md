@@ -1,41 +1,41 @@
-# Wiggum
+# Moloch
 
 Agentic implementation scaffold generator for dependency-aware AI coding workflows.
 
-Wiggum generates structured task files, progress trackers, and orchestrator prompts from a TOML plan definition — enabling autonomous AI coding loops where an orchestrator agent drives subagents through dependency-ordered tasks until a project is fully implemented.
+Moloch generates structured task files, progress trackers, and orchestrator prompts from a TOML plan definition — enabling autonomous AI coding loops where an orchestrator agent drives subagents through dependency-ordered tasks until a project is fully implemented.
 
 ## Install
 
 ```bash
-cargo install wiggum
+cargo install moloch
 ```
 
 ## Quick start
 
 ```bash
 # Create a plan interactively
-wiggum init
+moloch init
 
 # Or bootstrap from an existing project
-wiggum bootstrap /path/to/project
+moloch bootstrap /path/to/project
 
 # Or reverse-engineer a remote repo + apply hints
-wiggum reverse https://github.com/owner/repo --hints hints.toml
+moloch reverse https://github.com/owner/repo --hints hints.toml
 
 # …or with LLM-driven phase decomposition (Anthropic Claude)
-ANTHROPIC_API_KEY=sk-... wiggum reverse https://github.com/owner/repo --llm anthropic
+ANTHROPIC_API_KEY=sk-... moloch reverse https://github.com/owner/repo --llm anthropic
 
 # …or with MiniMax (Anthropic-shaped API)
-MINIMAX_API_KEY=... wiggum reverse https://github.com/owner/repo --llm minimax
+MINIMAX_API_KEY=... moloch reverse https://github.com/owner/repo --llm minimax
 
 # Validate the plan
-wiggum validate plan.toml --lint
+moloch validate plan.toml --lint
 
 # Preview output
-wiggum generate plan.toml --dry-run
+moloch generate plan.toml --dry-run
 
 # Generate artifacts
-wiggum generate plan.toml
+moloch generate plan.toml
 ```
 
 ## Commands
@@ -54,7 +54,7 @@ wiggum generate plan.toml
 | `retro`           | Generate improvement suggestions from PROGRESS.md                                                         |
 | `split`           | Split an oversized task into smaller units                                                                |
 | `templates`       | Manage reusable task templates                                                                            |
-| `version`         | Show CLI version with embedded git SHA (`wiggum <version> (<sha\|unknown>)`)                              |
+| `version`         | Show CLI version with embedded git SHA (`moloch <version> (<sha\|unknown>)`)                              |
 | `serve --mcp`     | Start the MCP server                                                                                      |
 | `report`          | Generate a post-execution report                                                                          |
 | `watch`           | Live progress monitoring                                                                                  |
@@ -82,18 +82,17 @@ project/
 ├── background-auditor.prompt.md
 └── evaluator.prompt.md             # only when [evaluator] is configured
 .opencode/agents/                   # when targets.opencode = true
-├── wiggum-orchestrator.md
-├── wiggum-implementer.md
-├── wiggum-planner.md
-├── wiggum-auditor.md
-└── wiggum-evaluator.md             # only when [evaluator] is configured
+├── orchestrator.md
+├── planner.md
+├── background-auditor.md
+└── evaluator.md                    # only when [evaluator] is configured
 .claude/                            # when targets.claude = true
 └── settings.json
 ```
 
 ## Targets
 
-Wiggum generates artifacts for one or more AI coding tools at once. The default
+Moloch generates artifacts for one or more AI coding tools at once. The default
 target is **VS Code + GitHub Copilot** for back-compat. To opt in to additional
 targets, add a `[targets]` section to your plan TOML or pass `--target` on the
 CLI:
@@ -101,23 +100,23 @@ CLI:
 ```toml
 [targets]
 vscode   = true   # default
-opencode = true   # .opencode/agents/wiggum-*.md
+opencode = true   # .opencode/agents/*.md
 claude   = true   # .claude/settings.json
 ```
 
 ```bash
-wiggum generate plan.toml --target opencode   # one target
-wiggum generate plan.toml --target all        # all three
+moloch generate plan.toml --target opencode   # one target
+moloch generate plan.toml --target all        # all three
 ```
 
-See [`docs/targets.md`](https://greysquirr3l.github.io/wiggum/targets.html) for the full reference.
+See [`docs/targets.md`](https://greysquirr3l.github.io/moloch/targets.html) for the full reference.
 
 ## Reverse-engineering a repo
 
-`wiggum reverse` turns any git URL into a `plan.toml` skeleton — useful when you're picking up an unfamiliar codebase and want the orchestrator to drive an investigation/implementation pass.
+`moloch reverse` turns any git URL into a `plan.toml` skeleton — useful when you're picking up an unfamiliar codebase and want the orchestrator to drive an investigation/implementation pass.
 
 ```bash
-wiggum reverse <url> [OPTIONS]
+moloch reverse <url> [OPTIONS]
 ```
 
 | Option           | Description                                                                                                    |
@@ -146,32 +145,32 @@ For monorepos where you only want to plan one subpackage:
 
 ```bash
 # Explicit flag
-wiggum reverse https://github.com/foo/monorepo --subdir services/api
+moloch reverse https://github.com/foo/monorepo --subdir services/api
 
 # Or just paste the GitHub /tree URL — auto-detected
-wiggum reverse https://github.com/foo/monorepo/tree/main/services/api --hints hints.toml
+moloch reverse https://github.com/foo/monorepo/tree/main/services/api --hints hints.toml
 ```
 
 Internally this uses `git clone --depth=1 --filter=blob:none --sparse` + `git sparse-checkout set <subdir>` so the rest of the working tree is never downloaded.
 
 ### LLM phase decomposition
 
-By default `wiggum reverse` produces a single placeholder phase the user fills in. With `--llm`, the detected project context (language, top-level tree, README excerpt, your hints) is sent to an LLM which returns a structured phase + task plan. The deterministic scan's detected project / orchestrator / preflight settings are preserved; only the phase list is rewritten. Any phases you declared in your hints TOML win over the model's suggestions.
+By default `moloch reverse` produces a single placeholder phase the user fills in. With `--llm`, the detected project context (language, top-level tree, README excerpt, your hints) is sent to an LLM which returns a structured phase + task plan. The deterministic scan's detected project / orchestrator / preflight settings are preserved; only the phase list is rewritten. Any phases you declared in your hints TOML win over the model's suggestions.
 
 Two providers ship today, both speaking the Anthropic-Messages JSON wire format (different base URLs):
 
 ```bash
 # Anthropic Claude
-ANTHROPIC_API_KEY=sk-... wiggum reverse https://github.com/foo/bar --llm anthropic
+ANTHROPIC_API_KEY=sk-... moloch reverse https://github.com/foo/bar --llm anthropic
 
 # MiniMax (Anthropic-shaped API, default model MiniMax-M3)
-MINIMAX_API_KEY=... wiggum reverse https://github.com/foo/bar --llm minimax
+MINIMAX_API_KEY=... moloch reverse https://github.com/foo/bar --llm minimax
 
 # Pin a specific MiniMax model
-wiggum reverse https://github.com/foo/bar --llm minimax --llm-model MiniMax-M2.7-highspeed
+moloch reverse https://github.com/foo/bar --llm minimax --llm-model MiniMax-M2.7-highspeed
 
 # Inline API key (otherwise read from env)
-wiggum reverse https://github.com/foo/bar --llm anthropic --api-key sk-...-override
+moloch reverse https://github.com/foo/bar --llm anthropic --api-key sk-...-override
 ```
 
 The LLM response is validated before merging (kebab-case slugs, no duplicate slugs, all deps resolve, no self-deps). Malformed responses surface a clear error rather than silently corrupting the plan.
@@ -205,14 +204,14 @@ Then start Copilot in agent mode and send:
 ### In opencode
 
 opencode auto-discovers agents from `.opencode/agents/`. Open the project and
-the `wiggum-orchestrator` agent appears in the agent picker. Select it and send:
+the `orchestrator` agent appears in the agent picker. Select it and send:
 
 > Begin by reading `PROGRESS.md` to identify the next incomplete task, then execute it. After each task passes preflight, update `PROGRESS.md` and continue to the next task.
 
 Monitor progress in a separate terminal with:
 
 ```bash
-wiggum watch
+moloch watch
 ```
 
 ## Example plan
@@ -266,7 +265,7 @@ Use `--dry-run` to preview the generated orchestrator prompt for any strategy be
 
 ```bash
 # See exactly what the complete strategy generates
-wiggum generate plan.toml --dry-run
+moloch generate plan.toml --dry-run
 ```
 
 ### Gates (human-in-the-loop stops)
@@ -288,7 +287,7 @@ Rust, Go, TypeScript, Python, Java, C#, Kotlin, Swift, Ruby, Elixir — each wit
 
 ## Security
 
-Wiggum bakes security into every generated plan at three levels:
+Moloch bakes security into every generated plan at three levels:
 
 **1. Non-negotiable rules in every subagent prompt**
 14 security rules are injected automatically into the `## Security` section of every task file and orchestrator prompt — covering the original 6 OWASP categories (secrets, SQL injection, headers, rate limiting, file uploads, SSRF) plus 8 additional rules: weak crypto detection (MD5, SHA-1), TLS validation, CSPRNG requirements, unsafe deserialization, path traversal prevention, credential logging, auth placeholder detection, and hardcoded IV/nonce detection. You don't have to add them; they're always there.
@@ -297,7 +296,7 @@ Wiggum bakes security into every generated plan at three levels:
 The language profile's audit command (`cargo audit`, `govulncheck`, `npm audit`, `pip-audit`, etc.) is appended to every task's preflight chain and exit criteria. Supply-chain CVEs are checked on every task completion, not just at the end. Override or disable per-plan with `preflight.audit`.
 
 **3. Automatic security hardening task**
-When your plan contains web-facing surface (detected from task slugs containing `http`, `api`, `server`, `webhook`, `upload`, `auth`, etc.), Wiggum auto-appends a `security-hardening` task as the final task in your plan. Its `must_haves` and `evaluation_criteria` map directly to the six OWASP categories with concrete, verifiable conditions. Suppress with `[security] skip_hardening_task = true` if you're handling security separately.
+When your plan contains web-facing surface (detected from task slugs containing `http`, `api`, `server`, `webhook`, `upload`, `auth`, etc.), Moloch auto-appends a `security-hardening` task as the final task in your plan. Its `must_haves` and `evaluation_criteria` map directly to the six OWASP categories with concrete, verifiable conditions. Suppress with `[security] skip_hardening_task = true` if you're handling security separately.
 
 ```toml
 # Opt out of the auto-injected security task if desired
@@ -312,7 +311,7 @@ AI-generated code often compiles successfully but has two common failure modes:
 1. **Disconnected wiring** — modules, services, and handlers are created but never actually connected to the application (e.g., a service class exists but is never instantiated and used)
 2. **Stub implementations** — placeholder code like `todo!()`, `unimplemented!()`, or `raise NotImplementedError` that compiles but crashes at runtime
 
-Wiggum auto-injects two late-stage audit tasks when your plan has 3+ explicit (user-defined) tasks:
+Moloch auto-injects two late-stage audit tasks when your plan has 3+ explicit (user-defined) tasks:
 
 **Integration wiring audit** — verifies all components are properly connected:
 
@@ -340,7 +339,7 @@ skip_stub_audit = true     # Disable stub cleanup audit
 
 AI-generated code often contains telltale patterns that reveal its origin — "slop" vocabulary like "robust" and "comprehensive", filler phrases, prompt leakage, and tutorial-style comments that restate the obvious.
 
-When style guidance is enabled (defaults shown below), Wiggum injects prompt guidance to improve code quality and maintainable structure:
+When style guidance is enabled (defaults shown below), Moloch injects prompt guidance to improve code quality and maintainable structure:
 
 - **Avoid slop vocabulary** — words like "leverage", "utilize", "facilitate", "seamless", "transformative"
 - **Avoid filler phrases** — "it's worth noting that", "let's break this down", "from a broader perspective"
@@ -364,19 +363,19 @@ avoid_god_files = true
 
 ## Discipline features
 
-Wiggum turns a plan into an engineering loop rather than a one-shot prompt. These features wire the discipline in:
+Moloch turns a plan into an engineering loop rather than a one-shot prompt. These features wire the discipline in:
 
-- **Plan quality scorecard at scaffold time** — `wiggum generate` prints a 5-dimension scorecard (Granularity, Dependency health, Coverage, Richness, Token budget, Harness complexity) with the overall score and top suggestions before it writes any files. Suppress with `--no-summary`.
-- **Mandatory evaluator for non-trivial plans** — `[orchestrator] require_evaluator` (T02) auto-derives to `true` when the plan resolves to ≥4 tasks or any slug matches a security-sensitive keyword (`auth`, `payment`, `billing`, `crypto`, `credential`, `webhook`, `secret`, `key`, `token`, `sign`, `signature`, `kdf`, `hash`). Without an `[evaluator]` block the plan fails validation with a fix-pointing error. Opt out with `require_evaluator = false` and `wiggum generate` prints a visible warning at scaffold time.
-- **Gates for security-sensitive tasks** — `[orchestrator] gates: Vec<String>` (T03) is auto-derived from task slug/title keywords when omitted. Any task whose slug matches a gate category must declare `gate = "<category>"` in its `TaskDef`; otherwise `wiggum validate` errors with the missing-gate message.
+- **Plan quality scorecard at scaffold time** — `moloch generate` prints a 5-dimension scorecard (Granularity, Dependency health, Coverage, Richness, Token budget, Harness complexity) with the overall score and top suggestions before it writes any files. Suppress with `--no-summary`.
+- **Mandatory evaluator for non-trivial plans** — `[orchestrator] require_evaluator` (T02) auto-derives to `true` when the plan resolves to ≥4 tasks or any slug matches a security-sensitive keyword (`auth`, `payment`, `billing`, `crypto`, `credential`, `webhook`, `secret`, `key`, `token`, `sign`, `signature`, `kdf`, `hash`). Without an `[evaluator]` block the plan fails validation with a fix-pointing error. Opt out with `require_evaluator = false` and `moloch generate` prints a visible warning at scaffold time.
+- **Gates for security-sensitive tasks** — `[orchestrator] gates: Vec<String>` (T03) is auto-derived from task slug/title keywords when omitted. Any task whose slug matches a gate category must declare `gate = "<category>"` in its `TaskDef`; otherwise `moloch validate` errors with the missing-gate message.
 - **Gate banner at the top of gated task files** — gated task files emit a `GATE — Human confirmation required before starting this task.` blockquote _above_ the H1, so the orchestrator (or a human reader) stops before scanning into the task body. PROGRESS.md rows for gated tasks are prefixed with `[GATE]`.
-- **`Next: …` hint after the scorecard** — `wiggum generate` ends with a single ≤80-char hint line telling the user what to do next (review gates / add `[evaluator]` / open `ORCHESTRATOR.md`). Decision tree adapts to plan state.
-- **`BUDGET.md`** — universal scaffold artifact with per-task token estimates, `WARN` (80k) / `CRITICAL` (150k) markers, recommended daily cap, and a `Cost tiers` section (noop / report / action). The same numbers feed `wiggum check`'s `Token budget` dimension.
+- **`Next: …` hint after the scorecard** — `moloch generate` ends with a single ≤80-char hint line telling the user what to do next (review gates / add `[evaluator]` / open `ORCHESTRATOR.md`). Decision tree adapts to plan state.
+- **`BUDGET.md`** — universal scaffold artifact with per-task token estimates, `WARN` (80k) / `CRITICAL` (150k) markers, recommended daily cap, and a `Cost tiers` section (noop / report / action). The same numbers feed `moloch check`'s `Token budget` dimension.
 - **`RUN_LOG.md`** — universal scaffold artifact with an empty markdown table pre-populated for per-iteration audit logging (timestamp, task_id, attempt, preflight_result, commit_sha, duration_seconds, notes). The orchestrator (or a human) appends rows.
-- **`--thin` scaffold mode** — `wiggum generate --thin` emits only the universal artifacts and skips every per-tool prompt directory (`.vscode/`, `.opencode/`, `.claude/`, agent_rules). Useful when you want the loop scaffolding without committing per-tool prompt files.
-- **`wiggum reverse` from any git URL** — clone a remote repo to a tempdir, scan it with the same heuristics as `wiggum bootstrap`, and merge user hints (TOML or Markdown) into the generated `plan.toml`. See the [Reverse-engineering a repo](#reverse-engineering-a-repo) section above for the full flag list and provider options.
-- **LLM-driven phase decomposition** — `wiggum reverse --llm <provider>` replaces the placeholder skeleton with intelligent phases + tasks. Providers: `anthropic` (api.anthropic.com, default `claude-sonnet-4-5`) and `minimax` (api.minimax.io/anthropic, Anthropic-shaped, default `MiniMax-M3`). API keys via `<PROVIDER>_API_KEY` env var or `--api-key`. The LLM response is validated (kebab-case slugs, no duplicates, deps resolve) before merge.
-- **Monorepo subfolder scoping** — `wiggum reverse --subdir <path>` (or `/tree/<branch>/<path>` in the URL) does a sparse checkout of just that subfolder via `git clone --filter=blob:none --sparse` + `git sparse-checkout set`, so monorepo subpackages can be planned without cloning the whole tree.
+- **`--thin` scaffold mode** — `moloch generate --thin` emits only the universal artifacts and skips every per-tool prompt directory (`.vscode/`, `.opencode/`, `.claude/`, agent_rules). Useful when you want the loop scaffolding without committing per-tool prompt files.
+- **`moloch reverse` from any git URL** — clone a remote repo to a tempdir, scan it with the same heuristics as `moloch bootstrap`, and merge user hints (TOML or Markdown) into the generated `plan.toml`. See the [Reverse-engineering a repo](#reverse-engineering-a-repo) section above for the full flag list and provider options.
+- **LLM-driven phase decomposition** — `moloch reverse --llm <provider>` replaces the placeholder skeleton with intelligent phases + tasks. Providers: `anthropic` (api.anthropic.com, default `claude-sonnet-4-5`) and `minimax` (api.minimax.io/anthropic, Anthropic-shaped, default `MiniMax-M3`). API keys via `<PROVIDER>_API_KEY` env var or `--api-key`. The LLM response is validated (kebab-case slugs, no duplicates, deps resolve) before merge.
+- **Monorepo subfolder scoping** — `moloch reverse --subdir <path>` (or `/tree/<branch>/<path>` in the URL) does a sparse checkout of just that subfolder via `git clone --filter=blob:none --sparse` + `git sparse-checkout set`, so monorepo subpackages can be planned without cloning the whole tree.
 
 ## Development
 
@@ -431,7 +430,7 @@ brew install gitleaks  # macOS
 
 ## Documentation
 
-Full docs: [greysquirr3l.github.io/wiggum](https://greysquirr3l.github.io/wiggum)
+Full docs: [greysquirr3l.github.io/moloch](https://greysquirr3l.github.io/moloch)
 
 ## License
 

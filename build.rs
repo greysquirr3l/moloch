@@ -1,7 +1,7 @@
 //! Build script that embeds the current git SHA at compile time.
 //!
-//! Sets the `WIGGUM_GIT_SHA` env var, available at runtime via
-//! `option_env!("WIGGUM_GIT_SHA")`.
+//! Sets the `MOLOCH_GIT_SHA` env var, available at runtime via
+//! `option_env!("MOLOCH_GIT_SHA")`.
 
 use std::process::Command;
 
@@ -19,5 +19,5 @@ fn main() {
         .and_then(|output| String::from_utf8(output.stdout).ok())
         .map_or_else(|| String::from("unknown"), |value| value.trim().to_owned());
 
-    println!("cargo:rustc-env=WIGGUM_GIT_SHA={sha}");
+    println!("cargo:rustc-env=MOLOCH_GIT_SHA={sha}");
 }

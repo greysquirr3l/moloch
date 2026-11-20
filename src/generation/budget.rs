@@ -144,7 +144,7 @@ pub fn render(plan: &Plan, tasks: &[ResolvedTask]) -> Result<String> {
     let _ = writeln!(
         out,
         "Tokens are measured against the cl100k_base-style heuristic used by \
-         `wiggum check`. Tasks above the WARN threshold risk losing detail to \
+         `moloch check`. Tasks above the WARN threshold risk losing detail to \
          context window churn; tasks above CRITICAL will almost certainly \
          truncate."
     );

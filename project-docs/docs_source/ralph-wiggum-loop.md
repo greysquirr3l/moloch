@@ -26,4 +26,4 @@ The Ralph Wiggum loop is an orchestration pattern for autonomous AI coding. An *
 
 The pattern was proven on the [Yakko project](https://github.com/greysquirr3l/yakko), a Rust Microsoft Teams TUI client where 13 tasks across 7 phases were executed sequentially by subagents in a single automated session.
 
-Wiggum makes this pattern reproducible for any project by generating the required artifacts from a structured plan definition.
+Moloch makes this pattern reproducible for any project by generating the required artifacts from a structured plan definition.

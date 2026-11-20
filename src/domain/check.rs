@@ -1,4 +1,4 @@
-//! Plan quality scoring — the `wiggum check` command.
+//! Plan quality scoring — the `moloch check` command.
 //!
 //! Unlike `validate --lint`, which checks structural correctness, `check`
 //! scores the *substance* of a plan on seven dimensions and produces concrete
@@ -715,7 +715,7 @@ pub fn format_score_report(score: &PlanScore) -> String {
 }
 
 /// Format a [`PlanScore`] as a compact one-glance scorecard suitable for
-/// printing at the end of `wiggum generate`.
+/// printing at the end of `moloch generate`.
 ///
 /// The output is intentionally narrower than [`format_score_report`]:
 /// one line per dimension, a single `Overall: X/10 (Healthy|Needs work)`

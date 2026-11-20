@@ -1,6 +1,6 @@
 # Workspaces
 
-A Wiggum **workspace** lets you orchestrate multiple `plan.toml` files as a unit. Use it when a project spans several independent components — a shared library, an API service, a background worker — that must be developed in a specific order but each need their own plan.
+A Moloch **workspace** lets you orchestrate multiple `plan.toml` files as a unit. Use it when a project spans several independent components — a shared library, an API service, a background worker — that must be developed in a specific order but each need their own plan.
 
 ## `workspace.toml`
 
@@ -45,10 +45,10 @@ depends_on = ["shared-lib"]
 
 ## Inter-plan dependencies
 
-`depends_on` on a `[[plans]]` entry defines ordering at the workspace level, independent of task-level dependencies inside each plan. Wiggum validates that the workspace dependency graph is a valid DAG — circular workspace dependencies are rejected.
+`depends_on` on a `[[plans]]` entry defines ordering at the workspace level, independent of task-level dependencies inside each plan. Moloch validates that the workspace dependency graph is a valid DAG — circular workspace dependencies are rejected.
 
 ## Scaffold generation
 
-Use the `wiggum_draft_plan` MCP tool or `wiggum init` to create individual `plan.toml` files for each component, then wire them together in `workspace.toml`.
+Use the `moloch_draft_plan` MCP tool or `moloch init` to create individual `plan.toml` files for each component, then wire them together in `workspace.toml`.
 
 Each component plan is generated and run independently. The workspace file provides the dependency ordering so the orchestrator knows which plans can proceed in parallel and which must wait.

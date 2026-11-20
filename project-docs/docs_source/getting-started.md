@@ -1,6 +1,6 @@
 # Getting Started
 
-This section covers installing Wiggum and creating your first plan.
+This section covers installing Moloch and creating your first plan.
 
 ## Prerequisites
 
@@ -11,8 +11,8 @@ This section covers installing Wiggum and creating your first plan.
 
 The typical workflow:
 
-1. **Create a plan** — Either interactively with `wiggum init` or by writing a `plan.toml` by hand
-2. **Generate artifacts** — Run `wiggum generate plan.toml` to produce task files, progress tracker, and orchestrator prompt
+1. **Create a plan** — Either interactively with `moloch init` or by writing a `plan.toml` by hand
+2. **Generate artifacts** — Run `moloch generate plan.toml` to produce task files, progress tracker, and orchestrator prompt
 3. **Run the loop** — Use your preferred AI coding tool with the generated orchestrator prompt to execute tasks sequentially
 
-Continue to [Installation](./installation.md) to get Wiggum on your system, or jump to [Quick Start](./quick-start.md) if you already have it installed.
+Continue to [Installation](./installation.md) to get Moloch on your system, or jump to [Quick Start](./quick-start.md) if you already have it installed.

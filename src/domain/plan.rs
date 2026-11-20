@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 
 use super::languages::LanguageProfile;
 use super::targets::TargetSet;
@@ -98,7 +98,7 @@ pub struct TargetConfig {
     /// is present, otherwise `TargetSet::vscode_only()` is used.
     #[serde(default)]
     pub vscode: Option<bool>,
-    /// Emit `.opencode/agents/wiggum-*.md` agent files. Defaults to `false`.
+    /// Emit `.opencode/agents/*.md` agent files. Defaults to `false`.
     #[serde(default)]
     pub opencode: Option<bool>,
     /// Emit `.claude/settings.json` hooks plus `CLAUDE.md` project memory.
@@ -223,7 +223,7 @@ impl EvaluatorConfig {
     ///
     /// # Errors
     ///
-    /// Returns `WiggumError::Validation` if the criteria weights are non-empty
+    /// Returns `MolochError::Validation` if the criteria weights are non-empty
     /// but do not sum to exactly 100.
     pub fn validate(&self) -> crate::error::Result<()> {
         if self.criteria.is_empty() {
@@ -231,7 +231,7 @@ impl EvaluatorConfig {
         }
         let total: u32 = self.criteria.iter().map(|c| u32::from(c.weight)).sum();
         if total != 100 {
-            return Err(WiggumError::Validation(format!(
+            return Err(MolochError::Validation(format!(
                 "evaluator criteria weights must sum to 100, got {total}"
             )));
         }
@@ -323,20 +323,20 @@ pub struct Orchestrator {
     ///   keyword (`auth`, `payment`, `billing`, `crypto`, `credential`,
     ///   `webhook`, `secret`, `key`, `token`, `sign`, `signature`, `kdf`,
     ///   `hash`). See [`auto_derive_require_evaluator`].
-    /// - `Some(true)`: evaluator is mandatory — `wiggum validate`/`generate`
+    /// - `Some(true)`: evaluator is mandatory — `moloch validate`/`generate`
     ///   error if the `[evaluator]` section is absent.
-    /// - `Some(false)`: evaluator explicitly skipped. `wiggum validate`
-    ///   accepts the plan, and `wiggum generate` prints a visible warning
+    /// - `Some(false)`: evaluator explicitly skipped. `moloch validate`
+    ///   accepts the plan, and `moloch generate` prints a visible warning
     ///   when the auto-derive rule would have required one.
     #[serde(default)]
     pub require_evaluator: Option<bool>,
     /// Categories of task that require an explicit human gate before the
-    /// subagent can begin implementation. When empty (the default), wiggum
+    /// subagent can begin implementation. When empty (the default), moloch
     /// auto-derives a list from the resolved task slugs/titles using
     /// [`GATE_KEYWORDS`]. When non-empty, only those categories are
     /// considered gates and every task whose slug or title matches must
     /// declare `gate = "<category>"` in its `TaskDef`; otherwise
-    /// `wiggum validate`/`generate` errors with a message naming the
+    /// `moloch validate`/`generate` errors with a message naming the
     /// missing gate and the affected task.
     #[serde(default)]
     pub gates: Vec<String>,
@@ -525,7 +525,7 @@ impl Anchor {
         };
         let raw = raw.trim();
         if raw.is_empty() {
-            return Err(WiggumError::Validation(format!(
+            return Err(MolochError::Validation(format!(
                 "anchor `{}` has an empty `lines` value — omit the field to anchor the whole file",
                 self.path
             )));
@@ -556,12 +556,12 @@ impl Anchor {
 fn parse_line(raw: &str) -> Result<u32> {
     let trimmed = raw.trim();
     let n = trimmed.parse::<u32>().map_err(|_| {
-        WiggumError::Validation(format!(
+        MolochError::Validation(format!(
             "`{trimmed}` is not a line number — use \"42\" or \"42-80\""
         ))
     })?;
     if n == 0 {
-        return Err(WiggumError::Validation(
+        return Err(MolochError::Validation(
             "line numbers are 1-based; `0` is not a valid anchor".to_string(),
         ));
     }
@@ -955,7 +955,7 @@ impl Plan {
     ///
     /// # Errors
     ///
-    /// Returns `WiggumError::Validation` on the first violation found,
+    /// Returns `MolochError::Validation` on the first violation found,
     /// listing every offending task so the user can fix all references
     /// in one pass. The check is safe to call with an empty `resolved`
     /// slice — only the duplicate-name check runs in that case.
@@ -971,7 +971,7 @@ impl Plan {
         if !duplicates.is_empty() {
             duplicates.sort_unstable();
             duplicates.dedup();
-            return Err(WiggumError::Validation(format!(
+            return Err(MolochError::Validation(format!(
                 "duplicate capability name(s): {}. Each [[capabilities]] entry must have a unique `name`.",
                 duplicates.join(", ")
             )));
@@ -992,7 +992,7 @@ impl Plan {
             }
         }
         if !offenders.is_empty() {
-            return Err(WiggumError::Validation(format!(
+            return Err(MolochError::Validation(format!(
                 "capability references: {} task(s) reference undefined capabilities:\n  - {}",
                 offenders.len(),
                 offenders.join("\n  - ")
@@ -1005,7 +1005,7 @@ impl Plan {
     ///
     /// # Errors
     ///
-    /// Returns `WiggumError::Validation` when the plan's effective
+    /// Returns `MolochError::Validation` when the plan's effective
     /// `require_evaluator` is true but the `[evaluator]` section is missing.
     /// The message names the trigger (task count or security-sensitive slug)
     /// and points at the two ways to resolve it: add an `[evaluator]` block
@@ -1013,7 +1013,7 @@ impl Plan {
     pub fn validate_gates_and_evaluator(&self, resolved: &[ResolvedTask]) -> Result<()> {
         for entry in &self.orchestrator.stop_when {
             if entry.trim().is_empty() || entry.contains('\n') || entry.contains('\r') {
-                return Err(WiggumError::Validation(format!(
+                return Err(MolochError::Validation(format!(
                     "invalid [orchestrator] stop_when entry {entry:?}: each entry must be a \
                      non-empty single line because it is rendered as one bullet"
                 )));
@@ -1037,10 +1037,10 @@ impl Plan {
                     sensitive.join(", ")
                 )
             };
-            return Err(WiggumError::Validation(format!(
+            return Err(MolochError::Validation(format!(
                 "evaluator required: {reason}, but no [evaluator] section is configured. \
                  Either add an [evaluator] block to the plan, or set `require_evaluator = false` \
-                 in [orchestrator] to opt out (wiggum generate will print a warning)."
+                 in [orchestrator] to opt out (moloch generate will print a warning)."
             )));
         }
         Ok(())
@@ -1070,7 +1070,7 @@ impl Plan {
         let mut seen = std::collections::HashSet::new();
         for t in &resolved {
             if !seen.insert(&t.slug) {
-                return Err(WiggumError::DuplicateSlug(t.slug.clone()));
+                return Err(MolochError::DuplicateSlug(t.slug.clone()));
             }
         }
 
@@ -1080,7 +1080,7 @@ impl Plan {
         for t in &resolved {
             for dep in &t.depends_on {
                 if !all_slugs.contains(dep.as_str()) {
-                    return Err(WiggumError::UnknownDependency {
+                    return Err(MolochError::UnknownDependency {
                         referenced: dep.clone(),
                         referencing: t.slug.clone(),
                     });
@@ -1303,7 +1303,7 @@ pub fn auto_derive_gates(explicit_gates: &[String], phases: &[Phase]) -> Vec<Str
 
 /// Validate gate declarations against the resolved task list.
 ///
-/// Returns `WiggumError::Validation` listing every task whose slug or
+/// Returns `MolochError::Validation` listing every task whose slug or
 /// title matches a gate category but does not declare a matching
 /// `gate = "<category>"` field. Returns `Ok(())` when no gate categories
 /// are configured, or when every gated task carries a matching
@@ -1315,7 +1315,7 @@ pub fn auto_derive_gates(explicit_gates: &[String], phases: &[Phase]) -> Vec<Str
 ///
 /// # Errors
 ///
-/// Returns `WiggumError::Validation` with one line per offending task.
+/// Returns `MolochError::Validation` with one line per offending task.
 pub fn validate_gates(plan: &Plan, resolved: &[ResolvedTask]) -> Result<()> {
     let gates = &plan.orchestrator.gates;
     if gates.is_empty() {
@@ -1352,7 +1352,7 @@ pub fn validate_gates(plan: &Plan, resolved: &[ResolvedTask]) -> Result<()> {
             Some(single) if gates.len() == 1 => format!("\"{single}\""),
             _ => format!("[{}]", gates.join(", ")),
         };
-        return Err(WiggumError::Validation(format!(
+        return Err(MolochError::Validation(format!(
             "gate coverage: {} task(s) require an explicit `gate` declaration matching one of {listed}:\n  - {}",
             offenders.len(),
             offenders.join("\n  - ")
@@ -1646,7 +1646,7 @@ depends_on = []
     /// to add `[evaluator]` blocks), but the production path in
     /// `cmd_generate` does call this helper. Tests assert on the error
     /// produced by `validate_gates_and_evaluator`.
-    fn parse_and_validate_or_err(toml: &str, context: &str) -> WiggumError {
+    fn parse_and_validate_or_err(toml: &str, context: &str) -> MolochError {
         let plan = match Plan::from_toml(toml) {
             Ok(p) => p,
             Err(e) => panic!("{context}: parse failed: {e}"),

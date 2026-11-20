@@ -1,8 +1,8 @@
-# example-hints.md — markdown hints file for `wiggum reverse`
+# example-hints.md — markdown hints file for `moloch reverse`
 
 #
 
-# Pass this file with `wiggum reverse <url> --hints example-hints.md` to
+# Pass this file with `moloch reverse <url> --hints example-hints.md` to
 
 # append freeform rules to the orchestrator's rule list
 
@@ -20,7 +20,7 @@
 
 # Project notes
 
-Some preamble here that `wiggum reverse` will ignore — only bullets under
+Some preamble here that `moloch reverse` will ignore — only bullets under
 `## Rules` are picked up.
 
 ## Rules
@@ -44,5 +44,5 @@ Some preamble here that `wiggum reverse` will ignore — only bullets under
 
 ## Other sections are ignored
 
-- This bullet will NOT be picked up by `wiggum reverse`
+- This bullet will NOT be picked up by `moloch reverse`
 - Only `## Rules` / `## Code style` / `## Orchestrator Rules` are scanned

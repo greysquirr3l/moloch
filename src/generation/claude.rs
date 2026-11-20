@@ -13,7 +13,7 @@
 use tera::{Context, Tera};
 
 use crate::domain::plan::Plan;
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 use crate::generation::stop_section::insert_stop_section;
 use crate::generation::templates::get_tera;
 
@@ -70,7 +70,7 @@ pub fn render_with(tera: &Tera, plan: &Plan) -> Result<String> {
     }
 
     tera.render("claude.md", &ctx)
-        .map_err(|e| WiggumError::Template(e.to_string()))
+        .map_err(|e| MolochError::Template(e.to_string()))
 }
 
 #[cfg(test)]

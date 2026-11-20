@@ -1,6 +1,6 @@
-//! The wiggum MCP tools.
+//! The moloch MCP tools.
 //!
-//! Each tool is an associated function on [`WiggumTools`], marked with
+//! Each tool is an associated function on [`MolochTools`], marked with
 //! `#[protocol_droid::tool]`. The macro derives the `inputSchema` from the
 //! Rust signature, so the schema a peer sees and the arguments the handler
 //! reads cannot drift apart — the previous hand-written `input_schema` JSON
@@ -37,25 +37,25 @@ use crate::domain::dag::validate_dag;
 use crate::domain::lint;
 use crate::domain::plan::Plan;
 use crate::domain::targets::TargetSet;
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 use crate::generation;
 use crate::ports::{PlanReader, ProgressStore};
 
-/// The wiggum MCP server.
+/// The moloch MCP server.
 ///
 /// The struct exists to give `#[protocol_droid::server]` an `impl` block to
 /// hang the tools off; it carries no state, because every tool is a
 /// function of its arguments.
-pub struct WiggumTools;
+pub struct MolochTools;
 
-/// Build the wiggum MCP server, with every tool behind the guardrails.
+/// Build the moloch MCP server, with every tool behind the guardrails.
 ///
 /// The server is assembled by hand rather than through
-/// `WiggumTools::into_server()` for one reason: `into_server()` never
+/// `MolochTools::into_server()` for one reason: `into_server()` never
 /// reaches `ServerBuilder::version`, so a peer would be told the server's
 /// version is whichever version of protocol-droid happens to be linked
-/// against rather than wiggum's own. A peer asking "which wiggum am I
-/// talking to" is asking about wiggum.
+/// against rather than moloch's own. A peer asking "which moloch am I
+/// talking to" is asking about moloch.
 ///
 /// # Errors
 ///
@@ -63,90 +63,90 @@ pub struct WiggumTools;
 /// the Rust signature, so this is a mistake in an argument type rather than
 /// anything a peer can cause.
 pub fn build_server() -> std::result::Result<Server, protocol_droid::domain::ir::JsonObjectError> {
-    let mut builder = Server::builder("wiggum").version(env!("CARGO_PKG_VERSION"));
+    let mut builder = Server::builder("moloch").version(env!("CARGO_PKG_VERSION"));
 
     builder = builder.tool(
-        __WiggumTools_wiggum_version_TOOL()?,
+        __MolochTools_moloch_version_TOOL()?,
         super::guarded(
-            "wiggum_version",
-            __WiggumTools_wiggum_version_HANDLER(WiggumTools::wiggum_version),
+            "moloch_version",
+            __MolochTools_moloch_version_HANDLER(MolochTools::moloch_version),
         ),
     );
     builder = builder.tool(
-        __WiggumTools_wiggum_generate_plan_TOOL()?,
+        __MolochTools_moloch_generate_plan_TOOL()?,
         super::guarded(
-            "wiggum_generate_plan",
-            __WiggumTools_wiggum_generate_plan_HANDLER(WiggumTools::wiggum_generate_plan),
+            "moloch_generate_plan",
+            __MolochTools_moloch_generate_plan_HANDLER(MolochTools::moloch_generate_plan),
         ),
     );
     builder = builder.tool(
-        __WiggumTools_wiggum_validate_plan_TOOL()?,
+        __MolochTools_moloch_validate_plan_TOOL()?,
         super::guarded(
-            "wiggum_validate_plan",
-            __WiggumTools_wiggum_validate_plan_HANDLER(WiggumTools::wiggum_validate_plan),
+            "moloch_validate_plan",
+            __MolochTools_moloch_validate_plan_HANDLER(MolochTools::moloch_validate_plan),
         ),
     );
     builder = builder.tool(
-        __WiggumTools_wiggum_lint_plan_TOOL()?,
+        __MolochTools_moloch_lint_plan_TOOL()?,
         super::guarded(
-            "wiggum_lint_plan",
-            __WiggumTools_wiggum_lint_plan_HANDLER(WiggumTools::wiggum_lint_plan),
+            "moloch_lint_plan",
+            __MolochTools_moloch_lint_plan_HANDLER(MolochTools::moloch_lint_plan),
         ),
     );
     builder = builder.tool(
-        __WiggumTools_wiggum_check_plan_TOOL()?,
+        __MolochTools_moloch_check_plan_TOOL()?,
         super::guarded(
-            "wiggum_check_plan",
-            __WiggumTools_wiggum_check_plan_HANDLER(WiggumTools::wiggum_check_plan),
+            "moloch_check_plan",
+            __MolochTools_moloch_check_plan_HANDLER(MolochTools::moloch_check_plan),
         ),
     );
     builder = builder.tool(
-        __WiggumTools_wiggum_read_progress_TOOL()?,
+        __MolochTools_moloch_read_progress_TOOL()?,
         super::guarded(
-            "wiggum_read_progress",
-            __WiggumTools_wiggum_read_progress_HANDLER(WiggumTools::wiggum_read_progress),
+            "moloch_read_progress",
+            __MolochTools_moloch_read_progress_HANDLER(MolochTools::moloch_read_progress),
         ),
     );
     builder = builder.tool(
-        __WiggumTools_wiggum_update_progress_TOOL()?,
+        __MolochTools_moloch_update_progress_TOOL()?,
         super::guarded(
-            "wiggum_update_progress",
-            __WiggumTools_wiggum_update_progress_HANDLER(WiggumTools::wiggum_update_progress),
+            "moloch_update_progress",
+            __MolochTools_moloch_update_progress_HANDLER(MolochTools::moloch_update_progress),
         ),
     );
     builder = builder.tool(
-        __WiggumTools_wiggum_list_templates_TOOL()?,
+        __MolochTools_moloch_list_templates_TOOL()?,
         super::guarded(
-            "wiggum_list_templates",
-            __WiggumTools_wiggum_list_templates_HANDLER(WiggumTools::wiggum_list_templates),
+            "moloch_list_templates",
+            __MolochTools_moloch_list_templates_HANDLER(MolochTools::moloch_list_templates),
         ),
     );
     builder = builder.tool(
-        __WiggumTools_wiggum_report_TOOL()?,
+        __MolochTools_moloch_report_TOOL()?,
         super::guarded(
-            "wiggum_report",
-            __WiggumTools_wiggum_report_HANDLER(WiggumTools::wiggum_report),
+            "moloch_report",
+            __MolochTools_moloch_report_HANDLER(MolochTools::moloch_report),
         ),
     );
     builder = builder.tool(
-        __WiggumTools_wiggum_generate_agents_md_TOOL()?,
+        __MolochTools_moloch_generate_agents_md_TOOL()?,
         super::guarded(
-            "wiggum_generate_agents_md",
-            __WiggumTools_wiggum_generate_agents_md_HANDLER(WiggumTools::wiggum_generate_agents_md),
+            "moloch_generate_agents_md",
+            __MolochTools_moloch_generate_agents_md_HANDLER(MolochTools::moloch_generate_agents_md),
         ),
     );
     builder = builder.tool(
-        __WiggumTools_wiggum_bootstrap_TOOL()?,
+        __MolochTools_moloch_bootstrap_TOOL()?,
         super::guarded(
-            "wiggum_bootstrap",
-            __WiggumTools_wiggum_bootstrap_HANDLER(WiggumTools::wiggum_bootstrap),
+            "moloch_bootstrap",
+            __MolochTools_moloch_bootstrap_HANDLER(MolochTools::moloch_bootstrap),
         ),
     );
     builder = builder.tool(
-        __WiggumTools_wiggum_draft_plan_TOOL()?,
+        __MolochTools_moloch_draft_plan_TOOL()?,
         super::guarded(
-            "wiggum_draft_plan",
-            __WiggumTools_wiggum_draft_plan_HANDLER(WiggumTools::wiggum_draft_plan),
+            "moloch_draft_plan",
+            __MolochTools_moloch_draft_plan_HANDLER(MolochTools::moloch_draft_plan),
         ),
     );
 
@@ -188,9 +188,9 @@ fn negotiable_protocol_range() -> String {
     clippy::unused_async_trait_impl,
     reason = "the #[tool] macro requires an `async fn`; the bodies are synchronous"
 )]
-#[protocol_droid::server(name = "wiggum")]
-impl WiggumTools {
-    /// Return wiggum version metadata (package, git SHA, MCP protocol).
+#[protocol_droid::server(name = "moloch")]
+impl MolochTools {
+    /// Return moloch version metadata (package, git SHA, MCP protocol).
     ///
     /// The protocol line names the revision this session actually settled
     /// on. A server used to report the *range* of revisions it could be
@@ -201,16 +201,16 @@ impl WiggumTools {
     /// revision is read from the session rather than guessed.
     ///
     /// The range is still reported alongside it: a peer that wants to know
-    /// whether wiggum can talk to it needs the range, not the one revision
+    /// whether moloch can talk to it needs the range, not the one revision
     /// this particular session happens to be on.
     ///
     /// Both are read from protocol-droid rather than written here, so they
     /// move when protocol-droid's set of revisions moves.
     #[protocol_droid::tool]
-    async fn wiggum_version(ctx: RequestContext) -> Result<String> {
-        let git_sha = option_env!("WIGGUM_GIT_SHA").unwrap_or("unknown");
+    async fn moloch_version(ctx: RequestContext) -> Result<String> {
+        let git_sha = option_env!("MOLOCH_GIT_SHA").unwrap_or("unknown");
         Ok(format!(
-            "wiggum {}\nGit SHA: {git_sha}\nMCP protocol: {}\nNegotiable: {}",
+            "moloch {}\nGit SHA: {git_sha}\nMCP protocol: {}\nNegotiable: {}",
             env!("CARGO_PKG_VERSION"),
             ctx.peer().negotiated().as_wire(),
             negotiable_protocol_range()
@@ -219,7 +219,7 @@ impl WiggumTools {
 
     /// Generate full scaffold from a plan TOML file path.
     #[protocol_droid::tool]
-    async fn wiggum_generate_plan(plan_path: String, target: Option<String>) -> Result<String> {
+    async fn moloch_generate_plan(plan_path: String, target: Option<String>) -> Result<String> {
         let target = target.unwrap_or_else(|| "vscode".to_string());
 
         let fs = FsAdapter;
@@ -229,7 +229,7 @@ impl WiggumTools {
             TargetSet::all()
         } else {
             TargetSet::from_cli_str(&target)
-                .map_err(|e| WiggumError::Validation(format!("target: {e}")))?
+                .map_err(|e| MolochError::Validation(format!("target: {e}")))?
         };
         let artifacts = generation::generate_all(&plan)?;
 
@@ -259,7 +259,7 @@ impl WiggumTools {
     /// Validate a plan TOML file: parse it, resolve its tasks, and check
     /// the dependency graph for cycles.
     #[protocol_droid::tool]
-    async fn wiggum_validate_plan(plan_path: String) -> Result<String> {
+    async fn moloch_validate_plan(plan_path: String) -> Result<String> {
         let fs = FsAdapter;
         let toml_content = fs.read_plan(&PathBuf::from(&plan_path))?;
         let plan = Plan::from_toml(&toml_content)?;
@@ -276,7 +276,7 @@ impl WiggumTools {
 
     /// Lint a plan TOML file and report every diagnostic.
     #[protocol_droid::tool]
-    async fn wiggum_lint_plan(plan_path: String) -> Result<String> {
+    async fn moloch_lint_plan(plan_path: String) -> Result<String> {
         let fs = FsAdapter;
         let toml_content = fs.read_plan(&PathBuf::from(&plan_path))?;
         let plan = Plan::from_toml(&toml_content)?;
@@ -306,7 +306,7 @@ impl WiggumTools {
     /// verifiability — and return an overall score with actionable
     /// suggestions.
     #[protocol_droid::tool]
-    async fn wiggum_check_plan(plan_path: String) -> Result<String> {
+    async fn moloch_check_plan(plan_path: String) -> Result<String> {
         let fs = FsAdapter;
         let toml_content = fs.read_plan(&PathBuf::from(&plan_path))?;
         let plan = Plan::from_toml(&toml_content)?;
@@ -318,7 +318,7 @@ impl WiggumTools {
 
     /// Read a PROGRESS.md file and report each task's status.
     #[protocol_droid::tool]
-    async fn wiggum_read_progress(progress_path: String) -> Result<String> {
+    async fn moloch_read_progress(progress_path: String) -> Result<String> {
         let fs = FsAdapter;
         let content = fs.read_progress(&PathBuf::from(&progress_path))?;
 
@@ -353,7 +353,7 @@ impl WiggumTools {
 
     /// Set a task's status in a PROGRESS.md file.
     #[protocol_droid::tool]
-    async fn wiggum_update_progress(
+    async fn moloch_update_progress(
         progress_path: String,
         task_number: u32,
         status: String,
@@ -367,7 +367,7 @@ impl WiggumTools {
             "completed" => "`[x]`",
             "blocked" => "`[!]`",
             other => {
-                return Err(WiggumError::Validation(format!("Invalid status: {other}")));
+                return Err(MolochError::Validation(format!("Invalid status: {other}")));
             }
         };
 
@@ -408,7 +408,7 @@ impl WiggumTools {
             .join("\n");
 
         if !updated {
-            return Err(WiggumError::Validation(format!(
+            return Err(MolochError::Validation(format!(
                 "Task {task_prefix} not found in progress file"
             )));
         }
@@ -419,7 +419,7 @@ impl WiggumTools {
 
     /// List the available language defaults and architecture styles.
     #[protocol_droid::tool]
-    async fn wiggum_list_templates() -> Result<String> {
+    async fn moloch_list_templates() -> Result<String> {
         Ok("Available language defaults:\n  \
             - rust: cargo build/test/clippy\n  \
             - go: go build/test/vet + golangci-lint\n  \
@@ -430,7 +430,7 @@ impl WiggumTools {
 
     /// Generate a progress report from a PROGRESS.md file.
     #[protocol_droid::tool]
-    async fn wiggum_report(progress_path: String, project_dir: Option<String>) -> Result<String> {
+    async fn moloch_report(progress_path: String, project_dir: Option<String>) -> Result<String> {
         let content = std::fs::read_to_string(&progress_path)?;
         let project_dir = project_dir.map(PathBuf::from);
 
@@ -440,7 +440,7 @@ impl WiggumTools {
 
     /// Generate an AGENTS.md file from a plan TOML.
     #[protocol_droid::tool]
-    async fn wiggum_generate_agents_md(plan_path: String) -> Result<String> {
+    async fn moloch_generate_agents_md(plan_path: String) -> Result<String> {
         let fs = FsAdapter;
         let toml_content = fs.read_plan(&PathBuf::from(&plan_path))?;
         let plan = Plan::from_toml(&toml_content)?;
@@ -456,7 +456,7 @@ impl WiggumTools {
 
     /// Scan an existing project directory and generate a skeleton plan TOML.
     #[protocol_droid::tool]
-    async fn wiggum_bootstrap(
+    async fn moloch_bootstrap(
         project_path: String,
         output_path: Option<String>,
         force: Option<bool>,
@@ -479,7 +479,7 @@ impl WiggumTools {
     /// The calling agent fills in the task details; this tool provides the
     /// correctly-structured scaffold.
     #[protocol_droid::tool]
-    async fn wiggum_draft_plan(
+    async fn moloch_draft_plan(
         project_name: String,
         description: String,
         language: Option<String>,
@@ -508,7 +508,7 @@ impl WiggumTools {
         );
 
         Ok(format!(
-            "# wiggum skeleton plan — fill in goals, hints, and evaluation_criteria before running `wiggum generate`\n\n{plan_toml}"
+            "# moloch skeleton plan — fill in goals, hints, and evaluation_criteria before running `moloch generate`\n\n{plan_toml}"
         ))
     }
 }

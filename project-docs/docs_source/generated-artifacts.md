@@ -1,6 +1,6 @@
 # Generated Artifacts
 
-When you run `wiggum generate`, the following artifacts are produced in your project directory.
+When you run `moloch generate`, the following artifacts are produced in your project directory.
 
 ## Universal artifacts (always emitted)
 
@@ -87,13 +87,13 @@ Custom criteria can be added per-task via the `evaluation_criteria` field in you
 
 ### Auto-injected security hardening task
 
-When your plan contains web-facing surface (task slugs or titles containing `http`, `api`, `server`, `webhook`, `upload`, `auth`, etc.), Wiggum automatically appends a `security-hardening` task as the final task in the resolved task list. This task has pre-populated `hints`, `test_hints`, `must_haves`, and `evaluation_criteria` covering all six OWASP baseline categories.
+When your plan contains web-facing surface (task slugs or titles containing `http`, `api`, `server`, `webhook`, `upload`, `auth`, etc.), Moloch automatically appends a `security-hardening` task as the final task in the resolved task list. This task has pre-populated `hints`, `test_hints`, `must_haves`, and `evaluation_criteria` covering all six OWASP baseline categories.
 
 Suppress with `[security] skip_hardening_task = true` in your plan, or by including your own task with the slug `security-hardening`. See [Security](./security.md) for details.
 
 ## Per-target artifacts
 
-Wiggum emits tool-specific agent prompts and configuration based on the active `[targets]` set. See [Targets](./targets.md) for how to select targets.
+Moloch emits tool-specific agent prompts and configuration based on the active `[targets]` set. See [Targets](./targets.md) for how to select targets.
 
 ### VSCode target — `.vscode/*.prompt.md`
 
@@ -129,7 +129,7 @@ companion hook that protects active work. Two files:
   session. It contains the project persona, preflight commands, architecture rules,
   user-defined rules, security rules, AI-avoidance guidance (when
   `[style] avoid_ai_patterns = true`), and the workflow loop. Claude Code IS its own
-  orchestrator — wiggum supplies context + rules, Claude Code drives dispatch.
+  orchestrator — moloch supplies context + rules, Claude Code drives dispatch.
 - **`.claude/settings.json`** — A `PreCompact` hook that blocks context compression
   while any in-progress task marker (`[~]`) exists in `PROGRESS.md`. This prevents
   Claude from compacting away active working state mid-task, preserving the full task
@@ -150,7 +150,7 @@ IDEs that do not speak the GitHub Copilot `runSubagent` or opencode `task` proto
 Each file contains the project metadata, preflight, architecture, user rules, security
 rules, AI-avoidance guidance (when enabled), strict rules (when enabled), strategy,
 and commit conventions — **no orchestrator-loop directives**. The receiving IDE
-drives its own agent loop; wiggum never dispatches subagents on its behalf.
+drives its own agent loop; moloch never dispatches subagents on its behalf.
 
 > **Why a separate target?** The `vscode` target emits prompts that call
 > `#tool:agent/runSubagent`, which is GitHub Copilot Chat-specific. Cursor, Windsurf,
@@ -159,4 +159,4 @@ drives its own agent loop; wiggum never dispatches subagents on its behalf.
 
 ## Parallel groups
 
-If tasks have no mutual dependencies, Wiggum identifies them as parallelizable and notes this in the generated progress tracker.
+If tasks have no mutual dependencies, Moloch identifies them as parallelizable and notes this in the generated progress tracker.

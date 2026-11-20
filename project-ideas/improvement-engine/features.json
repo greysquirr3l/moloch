@@ -1,0 +1,401 @@
+{
+  "project": "moloch-improvement-engine",
+  "tasks": [
+    {
+      "id": "T01",
+      "slug": "task-verify-commands",
+      "title": "Executable per-task verification (WI W3)",
+      "passes": true,
+      "criteria": [
+        {
+          "label": "build succeeds",
+          "passes": true
+        },
+        {
+          "label": "all tests pass",
+          "passes": true
+        },
+        {
+          "label": "linter clean",
+          "passes": true
+        },
+        {
+          "label": "implementation matches goal",
+          "passes": true
+        },
+        {
+          "label": "cargo test --all passes including the new integration test",
+          "passes": true
+        },
+        {
+          "label": "moloch validate tests/fixtures/example-plan.toml --lint and reference/example-plan.toml still succeed",
+          "passes": true
+        }
+      ]
+    },
+    {
+      "id": "T02",
+      "slug": "stop-and-baseline",
+      "title": "Stop-and-ask section and baseline-aware preflight (WI W4, W6)",
+      "passes": true,
+      "criteria": [
+        {
+          "label": "build succeeds",
+          "passes": true
+        },
+        {
+          "label": "all tests pass",
+          "passes": true
+        },
+        {
+          "label": "linter clean",
+          "passes": true
+        },
+        {
+          "label": "implementation matches goal",
+          "passes": true
+        },
+        {
+          "label": "Existing plans with no stop_when get exactly the default list",
+          "passes": true
+        },
+        {
+          "label": "cargo test --all passes",
+          "passes": true
+        }
+      ]
+    },
+    {
+      "id": "T03",
+      "slug": "golden-plan-corpus",
+      "title": "Golden plan corpus test (WI W7)",
+      "passes": true,
+      "criteria": [
+        {
+          "label": "build succeeds",
+          "passes": true
+        },
+        {
+          "label": "all tests pass",
+          "passes": true
+        },
+        {
+          "label": "linter clean",
+          "passes": true
+        },
+        {
+          "label": "implementation matches goal",
+          "passes": true
+        },
+        {
+          "label": "The evaluator removes the Stop and ask section locally and confirms the golden test fails, then restores it",
+          "passes": true
+        }
+      ]
+    },
+    {
+      "id": "T04",
+      "slug": "progress-corpus",
+      "title": "Redacted PROGRESS.md corpus with labels (plan Phase 0)",
+      "passes": false,
+      "criteria": [
+        {
+          "label": "build succeeds",
+          "passes": false
+        },
+        {
+          "label": "all tests pass",
+          "passes": false
+        },
+        {
+          "label": "linter clean",
+          "passes": false
+        },
+        {
+          "label": "implementation matches goal",
+          "passes": false
+        },
+        {
+          "label": "grep over tests/progress-corpus/ finds no commit hashes, URLs or secret-looking strings outside the allowed list the human approved",
+          "passes": false
+        }
+      ]
+    },
+    {
+      "id": "T05",
+      "slug": "structured-failure-rows",
+      "title": "Structured failure evidence in PROGRESS.md and RUN_LOG.md (plan Phase 1)",
+      "passes": false,
+      "criteria": [
+        {
+          "label": "build succeeds",
+          "passes": false
+        },
+        {
+          "label": "all tests pass",
+          "passes": false
+        },
+        {
+          "label": "linter clean",
+          "passes": false
+        },
+        {
+          "label": "implementation matches goal",
+          "passes": false
+        },
+        {
+          "label": "Legacy PROGRESS.md files produce the same TaskStatus results as before",
+          "passes": false
+        }
+      ]
+    },
+    {
+      "id": "T06",
+      "slug": "typed-patches",
+      "title": "Typed, evidence-backed improvement patches (plan Phase 2)",
+      "passes": false,
+      "criteria": [
+        {
+          "label": "build succeeds",
+          "passes": false
+        },
+        {
+          "label": "all tests pass",
+          "passes": false
+        },
+        {
+          "label": "linter clean",
+          "passes": false
+        },
+        {
+          "label": "implementation matches goal",
+          "passes": false
+        },
+        {
+          "label": "Retry counts on the labelled corpus match the labels",
+          "passes": false
+        },
+        {
+          "label": "The evaluator runs retro on three corpus files and reads the output",
+          "passes": false
+        }
+      ]
+    },
+    {
+      "id": "T07",
+      "slug": "scoped-approvals",
+      "title": "Scoped approvals in generated prompts (plan Phase 3)",
+      "passes": false,
+      "criteria": [
+        {
+          "label": "build succeeds",
+          "passes": false
+        },
+        {
+          "label": "all tests pass",
+          "passes": false
+        },
+        {
+          "label": "linter clean",
+          "passes": false
+        },
+        {
+          "label": "implementation matches goal",
+          "passes": false
+        },
+        {
+          "label": "Generated orchestrator and PROGRESS.md contain the scope rule and the Approvals table",
+          "passes": false
+        }
+      ]
+    },
+    {
+      "id": "T08",
+      "slug": "plan-invariants",
+      "title": "Plan-level invariants (plan Phase 4)",
+      "passes": false,
+      "criteria": [
+        {
+          "label": "build succeeds",
+          "passes": false
+        },
+        {
+          "label": "all tests pass",
+          "passes": false
+        },
+        {
+          "label": "linter clean",
+          "passes": false
+        },
+        {
+          "label": "implementation matches goal",
+          "passes": false
+        },
+        {
+          "label": "Golden corpus passes with the added invariants",
+          "passes": false
+        }
+      ]
+    },
+    {
+      "id": "T09",
+      "slug": "drift-compare",
+      "title": "Drift measurement between runs (plan Phase 5)",
+      "passes": false,
+      "criteria": [
+        {
+          "label": "build succeeds",
+          "passes": false
+        },
+        {
+          "label": "all tests pass",
+          "passes": false
+        },
+        {
+          "label": "linter clean",
+          "passes": false
+        },
+        {
+          "label": "implementation matches goal",
+          "passes": false
+        },
+        {
+          "label": "The evaluator breaks a patch locally and confirms the regeneration check fails",
+          "passes": false
+        }
+      ]
+    },
+    {
+      "id": "T10",
+      "slug": "evaluator-independence",
+      "title": "Evaluator independence lint (WI W5)",
+      "passes": false,
+      "criteria": [
+        {
+          "label": "build succeeds",
+          "passes": false
+        },
+        {
+          "label": "all tests pass",
+          "passes": false
+        },
+        {
+          "label": "linter clean",
+          "passes": false
+        },
+        {
+          "label": "implementation matches goal",
+          "passes": false
+        },
+        {
+          "label": "cargo test --all passes including the three new unit tests",
+          "passes": false
+        },
+        {
+          "label": "moloch validate project-ideas/plan.toml --lint raises no evaluator-not-independent warning",
+          "passes": false
+        }
+      ]
+    },
+    {
+      "id": "T11",
+      "slug": "promote-to-kind",
+      "title": "Promote recurring patterns to hardened task kinds (plan Phase 7)",
+      "passes": false,
+      "criteria": [
+        {
+          "label": "build succeeds",
+          "passes": false
+        },
+        {
+          "label": "all tests pass",
+          "passes": false
+        },
+        {
+          "label": "linter clean",
+          "passes": false
+        },
+        {
+          "label": "implementation matches goal",
+          "passes": false
+        },
+        {
+          "label": "The rule is silent on every corpus file when run alone and fires only on the aggregate",
+          "passes": false
+        }
+      ]
+    },
+    {
+      "id": "T12",
+      "slug": "integration-wiring",
+      "title": "Integration wiring audit",
+      "passes": false,
+      "criteria": [
+        {
+          "label": "build succeeds",
+          "passes": false
+        },
+        {
+          "label": "all tests pass",
+          "passes": false
+        },
+        {
+          "label": "linter clean",
+          "passes": false
+        },
+        {
+          "label": "implementation matches goal",
+          "passes": false
+        },
+        {
+          "label": "No dead code: every public function/type is reachable from main or tests",
+          "passes": false
+        },
+        {
+          "label": "Integration test passes exercising the primary user flow end-to-end",
+          "passes": false
+        },
+        {
+          "label": "Manual trace confirms each feature's wiring from entry to implementation",
+          "passes": false
+        }
+      ]
+    },
+    {
+      "id": "T13",
+      "slug": "stub-cleanup",
+      "title": "Stub and placeholder cleanup",
+      "passes": false,
+      "criteria": [
+        {
+          "label": "build succeeds",
+          "passes": false
+        },
+        {
+          "label": "all tests pass",
+          "passes": false
+        },
+        {
+          "label": "linter clean",
+          "passes": false
+        },
+        {
+          "label": "implementation matches goal",
+          "passes": false
+        },
+        {
+          "label": "grep for stub patterns returns zero matches in src/ (excluding tests)",
+          "passes": false
+        },
+        {
+          "label": "All previously-stubbed functions now have real implementations with tests",
+          "passes": false
+        },
+        {
+          "label": "Test suite passes with full coverage of formerly-stubbed code paths",
+          "passes": false
+        }
+      ]
+    }
+  ]
+}

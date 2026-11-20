@@ -5,7 +5,7 @@
 use tera::{Context, Tera};
 
 use crate::domain::plan::Plan;
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 use crate::generation::templates::get_tera;
 
 /// Render the `VSCode` planner prompt using the default `Tera` instance.
@@ -34,7 +34,7 @@ pub fn render_with(tera: &Tera, plan: &Plan) -> Result<String> {
     ctx.insert("preflight_lint", &plan.preflight.lint);
 
     tera.render("planner.md", &ctx)
-        .map_err(|e| WiggumError::Template(e.to_string()))
+        .map_err(|e| MolochError::Template(e.to_string()))
 }
 
 /// Render the opencode planner subagent prompt (`planner.md`).
@@ -63,7 +63,7 @@ pub fn render_opencode_with(tera: &Tera, plan: &Plan) -> Result<String> {
     ctx.insert("preflight_lint", &plan.preflight.lint);
 
     tera.render("planner_opencode.md", &ctx)
-        .map_err(|e| WiggumError::Template(e.to_string()))
+        .map_err(|e| MolochError::Template(e.to_string()))
 }
 
 #[cfg(test)]

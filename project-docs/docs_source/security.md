@@ -1,10 +1,10 @@
 # Security
 
-Wiggum bakes security into every generated plan at three levels: rules embedded in subagent prompts, a vulnerability audit command appended to every preflight chain, and an automatically injected security hardening task for plans with web-facing surface.
+Moloch bakes security into every generated plan at three levels: rules embedded in subagent prompts, a vulnerability audit command appended to every preflight chain, and an automatically injected security hardening task for plans with web-facing surface.
 
 ## Why it's automatic
 
-Independent security research consistently finds that AI-generated code introduces OWASP Top 10 vulnerabilities at high rates — particularly hardcoded secrets, SQL injection, missing HTTP security headers, disconnected rate limiting, unsafe file uploads, and SSRF. Wiggum treats these as structural concerns that belong in every plan by default, not optional additions the user must remember to include.
+Independent security research consistently finds that AI-generated code introduces OWASP Top 10 vulnerabilities at high rates — particularly hardcoded secrets, SQL injection, missing HTTP security headers, disconnected rate limiting, unsafe file uploads, and SSRF. Moloch treats these as structural concerns that belong in every plan by default, not optional additions the user must remember to include.
 
 For projects that need an even stricter baseline — every commit must satisfy the verified-modern toolchain baseline for the target language (full pedantic clippy for Rust, golangci-lint v2 + `govulncheck` for Go, PHPStan `level max` + Psalm `--taint-analysis` for PHP, etc.) — enable `[style] strict = true`. See [Strict Standards](./strict-standards.md) for the full rule sets per language.
 
@@ -80,7 +80,7 @@ audit = ""
 
 ## Level 3 — Auto-injected security hardening task
 
-When your plan contains web-facing surface, Wiggum automatically appends a `security-hardening` task as the final task. Web surface is detected from task slugs and titles containing any of: `http`, `api`, `server`, `router`, `route`, `endpoint`, `handler`, `webhook`, `upload`, `auth`, `login`, `session`, `request`, `response`, `middleware`, `web`, `rest`, `grpc`, `graphql`.
+When your plan contains web-facing surface, Moloch automatically appends a `security-hardening` task as the final task. Web surface is detected from task slugs and titles containing any of: `http`, `api`, `server`, `router`, `route`, `endpoint`, `handler`, `webhook`, `upload`, `auth`, `login`, `session`, `request`, `response`, `middleware`, `web`, `rest`, `grpc`, `graphql`.
 
 The injected task has:
 
@@ -110,7 +110,7 @@ Beyond security vulnerabilities, AI-generated code frequently has two structural
 1. **Disconnected wiring** — modules, services, and handlers are created but never actually connected to the application
 2. **Stub implementations** — placeholder code like `todo!()`, `unimplemented!()`, or `raise NotImplementedError` that compiles but crashes at runtime
 
-Wiggum auto-injects two late-stage audit tasks when your plan has 3+ tasks:
+Moloch auto-injects two late-stage audit tasks when your plan has 3+ tasks:
 
 ### Integration wiring audit
 
@@ -153,9 +153,9 @@ skip_stub_audit = true     # Disable stub cleanup audit
 
 You can also manually include tasks with slugs `integration-wiring` or `stub-cleanup` — if either slug is already present, the corresponding auto-injection is skipped.
 
-## Repository security posture (Wiggum itself)
+## Repository security posture (Moloch itself)
 
-The sections above describe security controls injected into generated plans. Wiggum's own repository and release pipeline are also hardened:
+The sections above describe security controls injected into generated plans. Moloch's own repository and release pipeline are also hardened:
 
 - **Least-privilege Actions tokens** — workflows use minimum required permissions.
 - **No privileged trigger patterns** — no `pull_request_target`; `workflow_run` is used only for safe workflow chaining.
@@ -168,7 +168,7 @@ The sections above describe security controls injected into generated plans. Wig
 
 GitHub does not trigger downstream `on: push: tags` workflows when a tag is pushed by another workflow using the default `GITHUB_TOKEN`.
 
-To keep releases automated without introducing elevated tokens, Wiggum uses this chain:
+To keep releases automated without introducing elevated tokens, Moloch uses this chain:
 
 1. CI succeeds on `main`.
 2. Auto-tag workflow creates/pushes `v*` tag.

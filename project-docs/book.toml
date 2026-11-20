@@ -1,5 +1,5 @@
 [book]
-title = "Wiggum Documentation"
+title = "Moloch Documentation"
 description = "Agentic implementation scaffold generator for dependency-aware AI coding workflows"
 authors = ["greysquirr3l"]
 language = "en"
@@ -9,5 +9,5 @@ src = "docs_source"
 build-dir = "../docs"
 
 [output.html]
-git-repository-url = "https://github.com/greysquirr3l/wiggum"
-edit-url-template = "https://github.com/greysquirr3l/wiggum/edit/main/project-docs/docs_source/{path}"
+git-repository-url = "https://github.com/greysquirr3l/moloch"
+edit-url-template = "https://github.com/greysquirr3l/moloch/edit/main/project-docs/docs_source/{path}"

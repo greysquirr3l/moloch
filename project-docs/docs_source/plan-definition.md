@@ -1,6 +1,6 @@
 # Plan Definition
 
-Wiggum plans are defined in TOML files. A plan describes your project metadata, phases, tasks, preflight commands, and orchestrator configuration.
+Moloch plans are defined in TOML files. A plan describes your project metadata, phases, tasks, preflight commands, and orchestrator configuration.
 
 ## Minimal example
 
@@ -57,13 +57,13 @@ depends_on = ["project-setup"]
 verify = ["cargo test --test domain_model"]
 ```
 
-`wiggum validate --lint` warns (`no-verification`) about tasks that have no `verify`, `evaluation_criteria` or `must_haves`, and reports `evaluation_criteria` entries that contain no backtick span, path, file name or number as `weak-criteria` (info). `wiggum check` scores the share of tasks with a `verify` command as the Verifiability dimension.
+`moloch validate --lint` warns (`no-verification`) about tasks that have no `verify`, `evaluation_criteria` or `must_haves`, and reports `evaluation_criteria` entries that contain no backtick span, path, file name or number as `weak-criteria` (info). `moloch check` scores the share of tasks with a `verify` command as the Verifiability dimension.
 
 Four default criteria are added to every task automatically: build succeeds, all tests pass, linter clean, and implementation matches goal.
 
 ## Target selection
 
-Wiggum can emit artifacts for one or more AI coding tools at once. Add a `[targets]` section to your plan to control which tools' agent files are generated. See [Targets](./targets.md) for the full reference.
+Moloch can emit artifacts for one or more AI coding tools at once. Add a `[targets]` section to your plan to control which tools' agent files are generated. See [Targets](./targets.md) for the full reference.
 
 ```toml
 [targets]
@@ -73,7 +73,7 @@ claude      = false  # CLAUDE.md + .claude/settings.json (full Claude Code suppo
 agent-rules = false  # .cursorrules + .windsurfrules + .github/copilot-instructions.md
 ```
 
-When the `[targets]` section is absent, Wiggum defaults to `vscode = true` and the other targets `false` — this matches the pre-`[targets]` behavior exactly. The CLI flag `--target <vscode|opencode|claude|agent-rules|all>` overrides the plan.
+When the `[targets]` section is absent, Moloch defaults to `vscode = true` and the other targets `false` — this matches the pre-`[targets]` behavior exactly. The CLI flag `--target <vscode|opencode|claude|agent-rules|all>` overrides the plan.
 
 ## Sections
 
@@ -84,10 +84,10 @@ When the `[targets]` section is absent, Wiggum defaults to `vscode = true` and t
 
 ## Checking plan quality
 
-Before generating, score your plan with `wiggum check`:
+Before generating, score your plan with `moloch check`:
 
 ```bash
-wiggum check plan.toml
+moloch check plan.toml
 ```
 
 This evaluates the plan on its quality dimensions (granularity, dependency health, coverage, richness, token budget, harness complexity, and verifiability) and prints actionable suggestions. Plans scoring below 7/10 exit with a non-zero status so they can be caught in CI.

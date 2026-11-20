@@ -4,7 +4,7 @@
 
 [project]
 name        = "thin-test"
-description = "Minimal fixture to verify wiggum generate --thin skips per-tool prompt files."
+description = "Minimal fixture to verify moloch generate --thin skips per-tool prompt files."
 language     = "rust"
 path         = "/tmp/thin-test"
 architecture = "modular"

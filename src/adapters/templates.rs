@@ -6,10 +6,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::adapters::fs::FsAdapter;
 use crate::domain::plan::{Plan, TaskDef, TaskKind};
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 use crate::ports::PlanReader;
 
-/// A task template stored in `~/.wiggum/templates/`.
+/// A task template stored in `~/.moloch/templates/`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TaskTemplate {
     pub slug: String,
@@ -65,7 +65,7 @@ impl From<TaskTemplate> for TaskDef {
 pub fn templates_dir() -> PathBuf {
     dirs::home_dir()
         .unwrap_or_else(|| PathBuf::from("."))
-        .join(".wiggum")
+        .join(".moloch")
         .join("templates")
 }
 
@@ -134,13 +134,13 @@ pub fn load_template(name: &str) -> Result<TaskTemplate> {
     let path = templates_dir().join(format!("{name}.toml"));
 
     if !path.exists() {
-        return Err(WiggumError::Validation(format!(
-            "Template '{name}' not found. Run `wiggum templates list` to see available templates."
+        return Err(MolochError::Validation(format!(
+            "Template '{name}' not found. Run `moloch templates list` to see available templates."
         )));
     }
 
     let content = std::fs::read_to_string(&path)?;
-    toml::from_str(&content).map_err(|e| WiggumError::PlanParse(e.to_string()))
+    toml::from_str(&content).map_err(|e| MolochError::PlanParse(e.to_string()))
 }
 
 /// Save a task as a template.
@@ -163,7 +163,7 @@ pub fn save_template(
         .iter()
         .flat_map(|p| &p.tasks)
         .find(|t| t.slug == task_slug)
-        .ok_or_else(|| WiggumError::Validation(format!("Task '{task_slug}' not found")))?;
+        .ok_or_else(|| MolochError::Validation(format!("Task '{task_slug}' not found")))?;
 
     let template: TaskTemplate = task_def.into();
     let name = template_name.unwrap_or(task_slug);
@@ -172,7 +172,7 @@ pub fn save_template(
     let path = dir.join(format!("{name}.toml"));
 
     let toml_str =
-        toml::to_string_pretty(&template).map_err(|e| WiggumError::PlanParse(e.to_string()))?;
+        toml::to_string_pretty(&template).map_err(|e| MolochError::PlanParse(e.to_string()))?;
 
     std::fs::write(&path, toml_str)?;
 
@@ -184,7 +184,7 @@ pub fn save_template(
 pub fn format_template_list(templates: &[TemplateInfo]) -> String {
     if templates.is_empty() {
         return format!(
-            "No templates found.\n\nCreate templates with:\n  wiggum templates save --plan plan.toml --task <slug>\n\nTemplates directory: {}",
+            "No templates found.\n\nCreate templates with:\n  moloch templates save --plan plan.toml --task <slug>\n\nTemplates directory: {}",
             templates_dir().display()
         );
     }
@@ -200,7 +200,7 @@ pub fn format_template_list(templates: &[TemplateInfo]) -> String {
         "Templates directory: {}",
         templates_dir().display()
     ));
-    lines.push("Use `wiggum templates show <name>` for details.".to_string());
+    lines.push("Use `moloch templates show <name>` for details.".to_string());
 
     lines.join("\n")
 }

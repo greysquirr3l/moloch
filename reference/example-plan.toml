@@ -4,9 +4,9 @@
 # Start here, trim what you don't need, and fill in your own project details.
 #
 # Run:
-#   wiggum validate example-plan.toml
-#   wiggum generate example-plan.toml --dry-run
-#   wiggum generate example-plan.toml
+#   moloch validate example-plan.toml
+#   moloch generate example-plan.toml --dry-run
+#   moloch generate example-plan.toml
 
 # ─── Project ──────────────────────────────────────────────────────────────────
 
@@ -43,20 +43,20 @@ on_failure  = "pause"       # pause | skip | escalate — action when retries ar
 # resolves to >=4 tasks or any slug matches a security-sensitive keyword
 # (auth, payment, billing, crypto, credential, webhook, secret, key,
 # token, sign, signature, kdf, hash). Explicit override below turns
-# the policy on; set to `false` to opt out (wiggum generate prints a
+# the policy on; set to `false` to opt out (moloch generate prints a
 # warning at scaffold time).
 require_evaluator = true
 # Gates for human-in-the-loop approval (T03). When empty (the default)
-# wiggum auto-derives gate categories from task slug/title keywords.
+# moloch auto-derives gate categories from task slug/title keywords.
 # Each task whose slug matches a gate keyword must declare
-# `gate = "<category>"` in its TaskDef, otherwise `wiggum validate`
+# `gate = "<category>"` in its TaskDef, otherwise `moloch validate`
 # errors with the missing-gate message. Set explicitly to override
 # auto-derive: `gates = ["auth", "payment"]`.
 gates = []
 # Extra situations where the orchestrator must stop and ask the human. Rendered after the
 # built-in defaults (deleting data, force-pushing, external systems, destructive operations).
 # stop_when = ["before changing the public API"]
-# Optional model pinning. Wiggum can't enforce the model from a prompt file, but it
+# Optional model pinning. Moloch can't enforce the model from a prompt file, but it
 # will render `model` as a recommendation header in orchestrator.prompt.md and inject
 # `subagent_model` as the `model:` argument on every `runSubagent` dispatch.
 # Any model registered in the VS Code Copilot Chat picker is valid, including local
@@ -133,7 +133,7 @@ description = "The domain module has no I/O dependencies (no tokio, no reqwest, 
 # ─── Code Anchors ─────────────────────────────────────────────────────────────
 # Optional. An anchor pins a task to a verified location in the target repo
 # so the implementer subagent starts at a known spot instead of grepping.
-# `wiggum validate --lint` then reports drift when the code moves out from
+# `moloch validate --lint` then reports drift when the code moves out from
 # under the plan. Entirely opt-in — plans with no anchors are unaffected.
 #
 # Paths are relative to [project].path. `role` is read | modify | create
@@ -403,14 +403,14 @@ skip_wiring_audit = false
 skip_stub_audit = false
 
 # ─── Targets ───────────────────────────────────────────────────────────────────
-# Selects which AI coding tools' scaffold files wiggum generates. Each field is
+# Selects which AI coding tools' scaffold files moloch generates. Each field is
 # optional; absent fields default to false. When the section is omitted entirely
-# wiggum defaults to `vscode = true` for back-compat. The `--target` CLI flag
+# moloch defaults to `vscode = true` for back-compat. The `--target` CLI flag
 # overrides this section. See docs/targets.md for the full reference.
 #
 # Targets:
 #   vscode       — VSCode + GitHub Copilot Chat (.vscode/*.prompt.md)
-#   opencode     — opencode (.opencode/agents/wiggum-*.md, uses the `task` tool)
+#   opencode     — opencode (.opencode/agents/*.md, uses the `task` tool)
 #   claude       — Claude Code (CLAUDE.md + .claude/settings.json PreCompact hook)
 #   agent-rules  — fork-neutral rules files (.cursorrules, .windsurfrules,
 #                  .github/copilot-instructions.md) for Cursor, Windsurf,

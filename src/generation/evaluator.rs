@@ -8,7 +8,7 @@
 use tera::{Context, Tera};
 
 use crate::domain::plan::{EvalMode, EvaluatorConfig, Plan, ResolvedTask};
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 use crate::generation::templates::get_tera;
 
 /// Render the evaluator prompt using the default template.
@@ -82,7 +82,7 @@ fn render_evaluator(
     }
 
     tera.render("evaluator.md", &ctx)
-        .map_err(|e| WiggumError::Template(e.to_string()))
+        .map_err(|e| MolochError::Template(e.to_string()))
 }
 
 /// Render the opencode evaluator subagent prompt (`evaluator.md`).
@@ -145,7 +145,7 @@ pub fn render_opencode_with(
 
     let rendered = tera
         .render("evaluator_opencode.md", &ctx)
-        .map_err(|e| WiggumError::Template(e.to_string()))?;
+        .map_err(|e| MolochError::Template(e.to_string()))?;
     Ok(Some(rendered))
 }
 

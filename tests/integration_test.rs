@@ -3,15 +3,15 @@
 use std::path::PathBuf;
 use tempfile::TempDir;
 
-use wiggum::adapters::fs::FsAdapter;
-use wiggum::adapters::retro::{RetroSuggestion, RetroSummary, Severity};
-use wiggum::adapters::{patterns, replan};
-use wiggum::domain::check::score_plan;
-use wiggum::domain::dag::validate_dag;
-use wiggum::domain::plan::Plan;
-use wiggum::domain::targets::TargetSet;
-use wiggum::generation;
-use wiggum::ports::PlanReader;
+use moloch::adapters::fs::FsAdapter;
+use moloch::adapters::retro::{RetroSuggestion, RetroSummary, Severity};
+use moloch::adapters::{patterns, replan};
+use moloch::domain::check::score_plan;
+use moloch::domain::dag::validate_dag;
+use moloch::domain::plan::Plan;
+use moloch::domain::targets::TargetSet;
+use moloch::generation;
+use moloch::ports::PlanReader;
 
 fn load_example_plan() -> Plan {
     let fs = FsAdapter;
@@ -474,7 +474,7 @@ fn task_hints_appear_in_output() {
     assert!(content.contains("Verify cargo build"));
 }
 
-// ─── New artifacts (wiggum 3.0) ──────────────────────────────────────────────
+// ─── New artifacts (moloch 3.0) ──────────────────────────────────────────────
 
 #[test]
 fn generate_all_includes_new_3_0_artifacts() {
@@ -606,7 +606,7 @@ fn patterns_save_from_retro_and_list() {
 
 #[test]
 fn patterns_save_multiple_sorted_by_timestamp() {
-    use wiggum::adapters::patterns::{Pattern, PatternSource};
+    use moloch::adapters::patterns::{Pattern, PatternSource};
 
     let tmp = TempDir::new().expect("temp dir");
     // Write three pattern files directly with known, distinct timestamps
@@ -866,18 +866,18 @@ fn thin_mode_target_set_none_equals_no_targets() {
 #[test]
 fn thin_flag_appears_in_cli_help() {
     use assert_cmd::Command;
-    let help = Command::cargo_bin("wiggum")
+    let help = Command::cargo_bin("moloch")
         .unwrap()
         // suppress stderr noise from tracing init
         .env("RUST_LOG", "error")
         .arg("generate")
         .arg("--help")
         .output()
-        .expect("Failed to invoke wiggum generate --help");
+        .expect("Failed to invoke moloch generate --help");
     let stdout = String::from_utf8_lossy(&help.stdout);
     assert!(
         stdout.contains("--thin"),
-        "--thin flag must appear in `wiggum generate --help` output, got:\n{stdout}"
+        "--thin flag must appear in `moloch generate --help` output, got:\n{stdout}"
     );
 }
 
@@ -1076,7 +1076,7 @@ fn plan_without_anchors_parses_and_renders_unchanged() {
     let resolved = plan.resolve_tasks().expect("resolve");
     assert!(resolved[0].anchors.is_empty());
 
-    let diags = wiggum::domain::anchors::lint_anchors(&resolved, tmp.path());
+    let diags = moloch::domain::anchors::lint_anchors(&resolved, tmp.path());
     assert!(
         diags.is_empty(),
         "expected no anchor diagnostics, got {diags:?}"
@@ -1173,7 +1173,7 @@ note = "region that no longer exists"
         tmp.path(),
     );
     let resolved = plan.resolve_tasks().expect("resolve");
-    let diags = wiggum::domain::anchors::lint_anchors(&resolved, tmp.path());
+    let diags = moloch::domain::anchors::lint_anchors(&resolved, tmp.path());
 
     assert_eq!(
         diags
@@ -1198,7 +1198,7 @@ note = "file was deleted"
         tmp.path(),
     );
     let resolved = plan.resolve_tasks().expect("resolve");
-    let diags = wiggum::domain::anchors::lint_anchors(&resolved, tmp.path());
+    let diags = moloch::domain::anchors::lint_anchors(&resolved, tmp.path());
 
     assert_eq!(
         diags
@@ -1268,7 +1268,7 @@ fn stop_and_ask_section_in_every_orchestrator_variant() {
 
     plan.orchestrator.stop_when = vec!["before rotating the signing key".to_string()];
     let artifacts = generation::generate_all(&plan).expect("Generation failed");
-    let claude = wiggum::generation::claude::render(&plan).expect("claude render");
+    let claude = moloch::generation::claude::render(&plan).expect("claude render");
     for (name, text) in [
         ("vscode", &artifacts.orchestrator_vscode),
         ("opencode", &artifacts.orchestrator_opencode),
@@ -1427,7 +1427,7 @@ fn baseline_step_renders_on_its_own_line_with_and_without_capabilities() {
 fn baseline_resume_rule_and_subagent_wording() {
     let plan = Plan::from_toml(BASELINE_PLAN_NO_CAPS).expect("plan parses");
     let art = generation::generate_all(&plan).expect("generation");
-    let claude = wiggum::generation::claude::render(&plan).expect("claude render");
+    let claude = moloch::generation::claude::render(&plan).expect("claude render");
     for (name, text) in [
         ("vscode", &art.orchestrator_vscode),
         ("opencode", &art.orchestrator_opencode),
@@ -1494,7 +1494,7 @@ fn assert_lines_present(name: &str, text: &str, lines: &[&str]) {
 fn approval_rules_in_every_orchestrator_variant_and_claude() {
     let plan = load_example_plan();
     let artifacts = generation::generate_all(&plan).expect("Generation failed");
-    let claude = wiggum::generation::claude::render(&plan).expect("claude render");
+    let claude = moloch::generation::claude::render(&plan).expect("claude render");
     for (name, text) in [
         ("vscode", &artifacts.orchestrator_vscode),
         ("opencode", &artifacts.orchestrator_opencode),
@@ -1537,7 +1537,7 @@ fn progress_has_approvals_table_and_still_parses() {
     assert!(baseline < approvals && approvals < header && header < learnings);
     assert!(lines.contains(&"_None recorded._"));
 
-    let summary = wiggum::domain::report::parse_progress(&artifacts.progress);
+    let summary = moloch::domain::report::parse_progress(&artifacts.progress);
     let resolved = plan.resolve_tasks().expect("resolve");
     assert_eq!(summary.tasks.len(), resolved.len());
     assert!(
@@ -1592,7 +1592,7 @@ fn approval_row_in_generated_progress_is_not_counted_as_a_task() {
         &format!("|---|---|---|---|\n{row}\n"),
     );
     assert!(progress.lines().any(|l| l == row), "row was inserted");
-    let summary = wiggum::domain::report::parse_progress(&progress);
+    let summary = moloch::domain::report::parse_progress(&progress);
     assert_eq!(summary.tasks.len(), expected);
     assert!(
         summary

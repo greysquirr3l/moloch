@@ -1,7 +1,7 @@
 use tera::{Context, Tera};
 
 use crate::domain::plan::{Plan, ResolvedTask};
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 use crate::generation::templates::get_tera;
 
 /// Render a single task file using the default template.
@@ -114,7 +114,7 @@ pub fn render_with(tera: &Tera, plan: &Plan, task: &ResolvedTask) -> Result<Stri
     ctx.insert("commit_message", &commit_message);
 
     tera.render("task.md", &ctx)
-        .map_err(|e| WiggumError::Template(e.to_string()))
+        .map_err(|e| MolochError::Template(e.to_string()))
 }
 
 #[cfg(test)]

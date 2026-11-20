@@ -1,6 +1,6 @@
 # Architecture
 
-Wiggum follows a hexagonal (ports and adapters) architecture.
+Moloch follows a hexagonal (ports and adapters) architecture.
 
 ## Layers
 

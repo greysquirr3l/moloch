@@ -1,6 +1,6 @@
 # Targets
 
-Wiggum can generate scaffold artifacts for one or more AI coding tools at the
+Moloch can generate scaffold artifacts for one or more AI coding tools at the
 same time. Each "target" is a different way of running the orchestrator
 loop — the underlying plan, tasks, progress tracker, and features registry are
 shared, but the agent prompts and configuration differ.
@@ -12,7 +12,7 @@ shared, but the agent prompts and configuration differ.
 | **VSCode** (default) | `vscode` | `.vscode/orchestrator.prompt.md` (and three siblings) | GitHub Copilot `runSubagent` tool |
 | **opencode** | `opencode` | `.opencode/agents/orchestrator.md` (and three siblings) + `ORCHESTRATOR.md` | opencode `task` tool with `subagent_type: "general"` and inline subagent body |
 | **Claude** | `claude` | `CLAUDE.md` (project memory) + `.claude/settings.json` (hooks) | Claude Code reads both files on every session; PreCompact hook blocks compaction mid-task |
-| **agent-rules** | `agent-rules` | `.cursorrules` + `.windsurfrules` + `.github/copilot-instructions.md` | The receiving IDE drives its own agent loop; wiggum supplies only rules + project context |
+| **agent-rules** | `agent-rules` | `.cursorrules` + `.windsurfrules` + `.github/copilot-instructions.md` | The receiving IDE drives its own agent loop; moloch supplies only rules + project context |
 
 You can enable any combination of targets for a single generate run.
 
@@ -41,10 +41,10 @@ absent fields are treated as `false`.
 ### CLI: `--target`
 
 ```bash
-wiggum generate plan.toml --target opencode          # just opencode
-wiggum generate plan.toml --target all               # all four
-wiggum generate plan.toml --target agent-rules       # Cursor / Windsurf / Copilot rules
-wiggum generate plan.toml --target vscode,opencode   # not supported — single value
+moloch generate plan.toml --target opencode          # just opencode
+moloch generate plan.toml --target all               # all four
+moloch generate plan.toml --target agent-rules       # Cursor / Windsurf / Copilot rules
+moloch generate plan.toml --target vscode,opencode   # not supported — single value
 ```
 
 `--target` accepts a single value: `vscode`, `opencode`, `claude`, `agent-rules`, or `all`.
@@ -56,7 +56,7 @@ wiggum generate plan.toml --target vscode,opencode   # not supported — single 
 3. Otherwise, the default (`vscode` only) for back-compat.
 
 If the resolved `TargetSet` is empty (every field explicitly `false`),
-`wiggum generate` errors out — at least one target must be enabled.
+`moloch generate` errors out — at least one target must be enabled.
 
 ## How the targets differ
 
@@ -99,7 +99,7 @@ If the resolved `TargetSet` is empty (every field explicitly `false`),
   embeds the subagent body inline as a `<SUBAGENT_PROMPT>` block. The
   orchestrator passes that block as the `prompt` argument when invoking
   `task(subagent_type="general", prompt=<SUBAGENT_PROMPT>)`. There is no
-  separate `wiggum-implementer` agent file to maintain.
+  separate `implementer` agent file to maintain.
 - **Permissions:** the orchestrator runs with permissive defaults
   (`edit: allow`, `bash: allow`, `task: allow`, `todowrite: allow`,
   `webfetch: ask`) so it can independently run preflight and dispatch
@@ -108,7 +108,7 @@ If the resolved `TargetSet` is empty (every field explicitly `false`),
 - **Evaluator agent** is generated only when `[evaluator]` is configured.
 - **Plan TOML path:** the orchestrator prompt and `ORCHESTRATOR.md`
   reference the plan file as `<your-plan>.toml` — a placeholder the
-  reader substitutes with their actual filename. wiggum doesn't guess the
+  reader substitutes with their actual filename. moloch doesn't guess the
   filename from the project name.
 
 ### Claude target
@@ -118,11 +118,11 @@ If the resolved `TargetSet` is empty (every field explicitly `false`),
 - **`CLAUDE.md`** — Claude Code reads this file on every session. It
   contains the project persona, preflight commands, architecture rules,
   user-defined rules, security rules, AI-avoidance guidance (if enabled),
-  and a workflow loop. Claude Code IS its own orchestrator; wiggum just
+  and a workflow loop. Claude Code IS its own orchestrator; moloch just
   supplies the context + rules it needs.
 - **Hook:** `PreCompact` blocks context compression while any `[~]` task
   exists in `PROGRESS.md`.
-- Combined, the two files constitute "full Claude Code support" — wiggum
+- Combined, the two files constitute "full Claude Code support" — moloch
   drives neither the loop nor the dispatch; Claude Code does.
 
 ### agent-rules target
@@ -136,7 +136,7 @@ If the resolved `TargetSet` is empty (every field explicitly `false`),
   reads its own format's file as project-level instructions.
 - **No orchestrator loop.** Unlike `vscode` and `opencode`, these files
   contain rules + project context only. The receiving IDE drives its own
-  agent loop; wiggum never dispatches subagents on its behalf.
+  agent loop; moloch never dispatches subagents on its behalf.
 - **GitHub Copilot** reads `.github/copilot-instructions.md` as
   repository-level instructions — this works in VSCode + Copilot even
   when the `vscode` target is also enabled (the two are complementary).
@@ -159,7 +159,7 @@ A plan with no `[targets]` section generates only the VSCode artifacts —
 exactly the pre-`[targets]` behavior.
 
 ```bash
-wiggum generate plan.toml
+moloch generate plan.toml
 # → .vscode/orchestrator.prompt.md
 # → .vscode/evaluator.prompt.md   (if [evaluator] configured)
 # → .vscode/planner.prompt.md
@@ -176,7 +176,7 @@ opencode = true
 ```
 
 ```bash
-wiggum generate plan.toml
+moloch generate plan.toml
 # → .opencode/agents/orchestrator.md          (single-file, embedded SUBAGENT_PROMPT)
 # → .opencode/agents/evaluator.md             (if [evaluator] configured)
 # → .opencode/agents/planner.md
@@ -195,7 +195,7 @@ agent-rules = true
 ```
 
 ```bash
-wiggum generate plan.toml
+moloch generate plan.toml
 # → .cursorrules                    (Cursor)
 # → .windsurfrules                  (Windsurf)
 # → .github/copilot-instructions.md (GitHub Copilot)
@@ -204,25 +204,25 @@ wiggum generate plan.toml
 ### Multi-target
 
 ```bash
-wiggum generate plan.toml --target all
+moloch generate plan.toml --target all
 # → VSCode files AND opencode files AND CLAUDE.md + .claude/settings.json
 #   AND .cursorrules + .windsurfrules + .github/copilot-instructions.md
 ```
 
 ## Cleaning up
 
-`wiggum clean` removes generated files for all targets, including the
+`moloch clean` removes generated files for all targets, including the
 deprecated `wiggum-*.md` filenames from older wiggum versions. To clean
 only one target's files, delete the relevant directory by hand
 (e.g. `rm -rf .opencode`).
 
 ## Custom templates
 
-`.wiggum/templates/` overrides still work, with two layouts:
+`.moloch/templates/` overrides still work, with two layouts:
 
-- **Flat (legacy):** `.wiggum/templates/orchestrator.opencode.md` overrides
+- **Flat (legacy):** `.moloch/templates/orchestrator.opencode.md` overrides
   the opencode variant.
-- **Subdir (new):** `.wiggum/templates/opencode/orchestrator.md` is also
+- **Subdir (new):** `.moloch/templates/opencode/orchestrator.md` is also
   discovered and takes priority over the flat layout. Subdirs map to target
   names: `vscode`, `opencode`.
 
@@ -230,14 +230,14 @@ Custom template names that match the opencode variants:
 
 | Subdir layout | Flat layout |
 |---|---|
-| `.wiggum/templates/vscode/orchestrator.md` | `.wiggum/templates/orchestrator.md` |
-| `.wiggum/templates/vscode/evaluator.md` | `.wiggum/templates/evaluator.md` |
-| `.wiggum/templates/vscode/planner.md` | `.wiggum/templates/planner.md` |
-| `.wiggum/templates/vscode/background_auditor.md` | `.wiggum/templates/background_auditor.md` |
-| `.wiggum/templates/opencode/orchestrator.md` | `.wiggum/templates/orchestrator_opencode.md` |
-| `.wiggum/templates/opencode/evaluator.md` | `.wiggum/templates/evaluator_opencode.md` |
-| `.wiggum/templates/opencode/planner.md` | `.wiggum/templates/planner_opencode.md` |
-| `.wiggum/templates/opencode/background_auditor.md` | `.wiggum/templates/background_auditor_opencode.md` |
+| `.moloch/templates/vscode/orchestrator.md` | `.moloch/templates/orchestrator.md` |
+| `.moloch/templates/vscode/evaluator.md` | `.moloch/templates/evaluator.md` |
+| `.moloch/templates/vscode/planner.md` | `.moloch/templates/planner.md` |
+| `.moloch/templates/vscode/background_auditor.md` | `.moloch/templates/background_auditor.md` |
+| `.moloch/templates/opencode/orchestrator.md` | `.moloch/templates/orchestrator_opencode.md` |
+| `.moloch/templates/opencode/evaluator.md` | `.moloch/templates/evaluator_opencode.md` |
+| `.moloch/templates/opencode/planner.md` | `.moloch/templates/planner_opencode.md` |
+| `.moloch/templates/opencode/background_auditor.md` | `.moloch/templates/background_auditor_opencode.md` |
 
 Note: there is no `opencode/implementer.md` template override — the opencode
 target uses a single-file orchestrator with the subagent body embedded

@@ -28,7 +28,7 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 
 // ─── Workspace model ──────────────────────────────────────────────────────────
 
@@ -85,7 +85,7 @@ impl Workspace {
     ///
     /// Returns an error if the TOML is malformed or missing required fields.
     pub fn from_toml(content: &str) -> Result<Self> {
-        toml::from_str(content).map_err(|e| WiggumError::PlanParse(e.to_string()))
+        toml::from_str(content).map_err(|e| MolochError::PlanParse(e.to_string()))
     }
 
     /// Resolve all plan paths relative to the workspace file's directory and
@@ -102,7 +102,7 @@ impl Workspace {
         let mut name_set: HashSet<&str> = HashSet::new();
         for p in &self.plans {
             if !name_set.insert(p.name.as_str()) {
-                return Err(WiggumError::DuplicateSlug(p.name.clone()));
+                return Err(MolochError::DuplicateSlug(p.name.clone()));
             }
         }
 
@@ -110,7 +110,7 @@ impl Workspace {
         for p in &self.plans {
             for dep in &p.depends_on {
                 if !name_set.contains(dep.as_str()) {
-                    return Err(WiggumError::UnknownDependency {
+                    return Err(MolochError::UnknownDependency {
                         referenced: dep.clone(),
                         referencing: p.name.clone(),
                     });
@@ -177,7 +177,7 @@ fn toposort_plans(plans: &[PlanRef]) -> Result<Vec<String>> {
         })
         .map_err(|e| {
             let node = graph.node_weight(e.node_id()).copied().unwrap_or("unknown");
-            WiggumError::CycleDetected(format!("inter-plan cycle involves: {node}"))
+            MolochError::CycleDetected(format!("inter-plan cycle involves: {node}"))
         })
 }
 
@@ -352,7 +352,7 @@ path = "b/plan.toml"
 "#;
         let ws = Workspace::from_toml(toml).expect("parse failed");
         let err = ws.resolve(Path::new("/tmp")).unwrap_err();
-        assert!(matches!(err, WiggumError::DuplicateSlug(_)));
+        assert!(matches!(err, MolochError::DuplicateSlug(_)));
     }
 
     #[test]
@@ -368,7 +368,7 @@ depends_on = ["nonexistent"]
 "#;
         let ws = Workspace::from_toml(toml).expect("parse failed");
         let err = ws.resolve(Path::new("/tmp")).unwrap_err();
-        assert!(matches!(err, WiggumError::UnknownDependency { .. }));
+        assert!(matches!(err, MolochError::UnknownDependency { .. }));
     }
 
     #[test]
@@ -389,7 +389,7 @@ depends_on = ["a"]
 "#;
         let ws = Workspace::from_toml(toml).expect("parse failed");
         let err = ws.resolve(Path::new("/tmp")).unwrap_err();
-        assert!(matches!(err, WiggumError::CycleDetected(_)));
+        assert!(matches!(err, MolochError::CycleDetected(_)));
     }
 
     #[test]

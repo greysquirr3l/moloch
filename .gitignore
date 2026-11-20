@@ -45,7 +45,7 @@ Cargo.lock
 # VS Code settings (machine-specific)
 .vscode/settings.json
 
-# Wiggum generated output (from `wiggum generate`)
+# Moloch generated output (from `moloch generate`)
 # Un-ignore these if you want to track scaffolded artifacts
 PROGRESS.md
 IMPLEMENTATION_PLAN.md
@@ -66,4 +66,4 @@ reference/*
 !reference/example-workspace/**
 
 ai_assisted_development-security.md
-.wiggum/
+.moloch/

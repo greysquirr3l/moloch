@@ -3,7 +3,7 @@ use predicates::str::{contains, is_match};
 
 #[test]
 fn version_subcommand_prints_version_and_git_sha() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = Command::cargo_bin("wiggum")?;
+    let mut cmd = Command::cargo_bin("moloch")?;
     let sha_pattern = is_match(r"\([0-9a-f]{7,}|unknown\)")?;
 
     cmd.arg("version")

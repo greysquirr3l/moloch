@@ -83,7 +83,7 @@ Tasks with no anchors get no such section.
 
 ## Drift detection
 
-`wiggum validate --lint` resolves every anchor against the project on disk. This
+`moloch validate --lint` resolves every anchor against the project on disk. This
 is what turns "the plan says X" into something checkable.
 
 | Condition                                     | Rule                     | Severity                |
@@ -100,7 +100,7 @@ is what turns "the plan says X" into something checkable.
 | `[project].path` does not exist               | `anchor-root-missing`    | warning (reported once) |
 
 ```console
-$ wiggum validate plan.toml --lint
+$ moloch validate plan.toml --lint
 ✅ Plan is valid
    Phases: 1
    Tasks:  1
@@ -112,19 +112,19 @@ Lint: 1 warning
 ```
 
 Warnings do not fail the run. **Errors do not block generation either** —
-`validate --lint` reports them, and `wiggum generate` proceeds. Treat a
+`validate --lint` reports them, and `moloch generate` proceeds. Treat a
 `anchor-file-missing` error as "this plan needs a refresh before it is worth
 running", not as a hard gate.
 
-The same checks run through the MCP `wiggum_lint_plan` tool, so an agent driving
-wiggum through MCP gets drift warnings in its lint result too.
+The same checks run through the MCP `moloch_lint_plan` tool, so an agent driving
+moloch through MCP gets drift warnings in its lint result too.
 
 ## Keeping anchors honest
 
 Anchors rot. A refactor upstream shifts lines, and a citation written last month
 can now point at the wrong function. Two habits keep them trustworthy:
 
-- **Re-run `wiggum validate --lint` before `wiggum generate`.** Drift is cheap
+- **Re-run `moloch validate --lint` before `moloch generate`.** Drift is cheap
   to find and cheap to fix at that point.
 - **Treat a `anchor-line-drift` warning as "re-read the file", not "widen the
   range".** The line numbers moved; the note is still the thing that tells you

@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use crate::domain::report::{TaskStatus, parse_progress};
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 
 /// A retrospective suggestion.
 #[derive(Debug, Clone)]
@@ -50,7 +50,7 @@ pub struct RetroSummary {
 #[allow(clippy::too_many_lines)]
 pub fn analyze_progress(progress_path: &Path) -> Result<RetroSummary> {
     let content = std::fs::read_to_string(progress_path).map_err(|e| {
-        WiggumError::Io(std::io::Error::new(
+        MolochError::Io(std::io::Error::new(
             e.kind(),
             format!("Failed to read {}: {}", progress_path.display(), e),
         ))
@@ -119,7 +119,7 @@ pub fn analyze_progress(progress_path: &Path) -> Result<RetroSummary> {
             suggestions.push(RetroSuggestion {
                 pattern: format!("{task_id} was too complex"),
                 suggestion: format!(
-                    "Consider using `wiggum split --task {task_id}` to break it down."
+                    "Consider using `moloch split --task {task_id}` to break it down."
                 ),
                 task_slug: Some(task_id.clone()),
                 severity: Severity::Warning,

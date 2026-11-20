@@ -5,7 +5,7 @@ use std::path::Path;
 
 use crate::adapters::fs::FsAdapter;
 use crate::domain::plan::{Plan, TaskDef};
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 use crate::generation::tokens::estimate_tokens;
 use crate::ports::PlanReader;
 
@@ -35,7 +35,7 @@ pub fn analyze_task(plan_path: &Path, task_slug: &str) -> Result<SplitAnalysis> 
     let task = resolved
         .iter()
         .find(|t| t.slug == task_slug)
-        .ok_or_else(|| WiggumError::Validation(format!("Task '{task_slug}' not found")))?;
+        .ok_or_else(|| MolochError::Validation(format!("Task '{task_slug}' not found")))?;
 
     // Estimate tokens for this task's prompt
     let task_content = format!(
@@ -176,11 +176,11 @@ pub fn apply_split(plan_path: &Path, split: &SplitPlan) -> Result<String> {
                 .map(|ti| (pi, ti))
         })
         .ok_or_else(|| {
-            WiggumError::Validation(format!("Task '{}' not found", split.original_slug))
+            MolochError::Validation(format!("Task '{}' not found", split.original_slug))
         })?;
 
     if split.parts.len() < 2 {
-        return Err(WiggumError::Validation(format!(
+        return Err(MolochError::Validation(format!(
             "Cannot split task '{}': split plan must have at least 2 parts, got {}",
             split.original_slug,
             split.parts.len()
@@ -189,14 +189,14 @@ pub fn apply_split(plan_path: &Path, split: &SplitPlan) -> Result<String> {
 
     let phase_count = plan.phases.len();
     let phase = plan.phases.get_mut(phase_idx).ok_or_else(|| {
-        WiggumError::Validation(format!(
+        MolochError::Validation(format!(
             "Invalid phase index while splitting task '{}': phase_idx={phase_idx} but phase_count={phase_count}",
             split.original_slug
         ))
     })?;
     let task_count = phase.tasks.len();
     if task_idx >= task_count {
-        return Err(WiggumError::Validation(format!(
+        return Err(MolochError::Validation(format!(
             "Invalid task index while splitting task '{}': phase_idx={phase_idx}, task_idx={task_idx} but task_count={task_count}",
             split.original_slug
         )));
@@ -223,7 +223,7 @@ pub fn apply_split(plan_path: &Path, split: &SplitPlan) -> Result<String> {
 
     // Serialize back to TOML
     let new_toml =
-        toml::to_string_pretty(&plan).map_err(|e| WiggumError::PlanParse(e.to_string()))?;
+        toml::to_string_pretty(&plan).map_err(|e| MolochError::PlanParse(e.to_string()))?;
 
     // Write back
     std::fs::write(plan_path, &new_toml)?;
@@ -319,7 +319,7 @@ fn prompt_string(prompt: &str, default: &str) -> Result<String> {
     if trimmed.is_empty() && !default.is_empty() {
         Ok(default.to_string())
     } else if trimmed.is_empty() {
-        Err(WiggumError::Validation("Input required".into()))
+        Err(MolochError::Validation("Input required".into()))
     } else {
         Ok(trimmed.to_string())
     }
@@ -338,7 +338,7 @@ fn prompt_number(prompt: &str, default: usize) -> Result<usize> {
     } else {
         trimmed
             .parse()
-            .map_err(|_| WiggumError::Validation("Invalid number".into()))
+            .map_err(|_| MolochError::Validation("Invalid number".into()))
     }
 }
 
@@ -368,7 +368,7 @@ pub fn format_split_preview(analysis: &SplitAnalysis) -> String {
             "⚠️  Exceeds recommended size (~{OVERSIZED_THRESHOLD} tokens)"
         ));
         lines.push(format!(
-            "Suggestion: `wiggum split --task {}`",
+            "Suggestion: `moloch split --task {}`",
             analysis.slug
         ));
     } else {
@@ -459,7 +459,7 @@ mod tests {
             rewire_dependents: false,
         };
         let err = apply_split(tmp.path(), &split).unwrap_err();
-        let message = if let WiggumError::Validation(message) = err {
+        let message = if let MolochError::Validation(message) = err {
             message
         } else {
             String::new()
@@ -484,7 +484,7 @@ mod tests {
             rewire_dependents: false,
         };
         let err = apply_split(tmp.path(), &split).unwrap_err();
-        let message = if let WiggumError::Validation(message) = err {
+        let message = if let MolochError::Validation(message) = err {
             message
         } else {
             String::new()

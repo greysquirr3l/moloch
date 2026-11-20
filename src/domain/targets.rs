@@ -1,6 +1,6 @@
 //! Target selection for generated artifacts.
 //!
-//! Wiggum supports emitting scaffold files for multiple AI coding tools
+//! Moloch supports emitting scaffold files for multiple AI coding tools
 //! simultaneously. The `Target` enum identifies a single supported tool,
 //! and `TargetSet` is the set of tools a given generate run should write
 //! artifacts for.
@@ -16,14 +16,14 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
-/// The set of AI coding tools wiggum can emit artifacts for.
+/// The set of AI coding tools moloch can emit artifacts for.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Target {
     /// VS Code + GitHub Copilot. Emits `.vscode/*.prompt.md` files using
     /// the `runSubagent` tool.
     Vscode,
-    /// opencode. Emits `.opencode/agents/wiggum-*.md` agent files using
+    /// opencode. Emits `.opencode/agents/*.md` agent files using
     /// the `task` tool for subagent dispatch.
     Opencode,
     /// Claude Code. Emits `.claude/settings.json` hooks plus `CLAUDE.md`
@@ -34,7 +34,7 @@ pub enum Target {
     /// `.cursorrules` (Cursor), `.windsurfrules` (Windsurf), and
     /// `.github/copilot-instructions.md` (GitHub Copilot / forks that read
     /// it). The receiving IDE is responsible for its own agent loop;
-    /// wiggum only provides the rules + project context.
+    /// moloch only provides the rules + project context.
     AgentRules,
 }
 

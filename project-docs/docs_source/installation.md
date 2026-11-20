@@ -3,25 +3,25 @@
 ## From crates.io
 
 ```bash
-cargo install wiggum
+cargo install moloch
 ```
 
 ## From source
 
 ```bash
-git clone https://github.com/greysquirr3l/wiggum.git
-cd wiggum
+git clone https://github.com/greysquirr3l/moloch.git
+cd moloch
 cargo install --path .
 ```
 
 ## Verify installation
 
 ```bash
-wiggum version
+moloch version
 ```
 
 Expected output format:
 
 ```text
-wiggum <version> (<sha|unknown>)
+moloch <version> (<sha|unknown>)
 ```

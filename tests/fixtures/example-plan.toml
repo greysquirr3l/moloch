@@ -1,6 +1,6 @@
 [project]
 name = "example-project"
-description = "An example project to test wiggum scaffold generation"
+description = "An example project to test moloch scaffold generation"
 language = "rust"
 path = "/tmp/example-project"
 architecture = "hexagonal"

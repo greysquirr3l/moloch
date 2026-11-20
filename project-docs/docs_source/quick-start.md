@@ -3,23 +3,23 @@
 ## 1. Create a plan interactively
 
 ```bash
-wiggum init
+moloch init
 ```
 
 This walks you through project setup — name, description, language, architecture style, phases, and tasks — and writes a `plan.toml`.
 
 ## 2. Or bootstrap from an existing project
 
-If you already have a project directory, Wiggum can detect the language, build system, and structure to create a starter plan:
+If you already have a project directory, Moloch can detect the language, build system, and structure to create a starter plan:
 
 ```bash
-wiggum bootstrap /path/to/project
+moloch bootstrap /path/to/project
 ```
 
 ## 3. Validate the plan
 
 ```bash
-wiggum validate plan.toml --lint
+moloch validate plan.toml --lint
 ```
 
 This checks that the dependency graph is a valid DAG and runs lint rules to catch common plan quality issues.
@@ -27,19 +27,19 @@ This checks that the dependency graph is a valid DAG and runs lint rules to catc
 ## 4. Preview what will be generated
 
 ```bash
-wiggum generate plan.toml --dry-run --estimate-tokens
+moloch generate plan.toml --dry-run --estimate-tokens
 ```
 
 ## 5. Generate artifacts
 
 ```bash
-wiggum generate plan.toml
+moloch generate plan.toml
 ```
 
 This produces the task files, `PROGRESS.md`, `IMPLEMENTATION_PLAN.md`, and the
 target-specific agent prompts in your project directory.
 
-By default, Wiggum emits VSCode + Copilot prompt files (`.vscode/*.prompt.md`).
+By default, Moloch emits VSCode + Copilot prompt files (`.vscode/*.prompt.md`).
 Other targets are opt-in via `--target` or the plan's `[targets]` section:
 
 | Target | CLI / plan field | What gets emitted |
@@ -49,7 +49,7 @@ Other targets are opt-in via `--target` or the plan's `[targets]` section:
 | Claude Code | `--target claude` | `CLAUDE.md` (project memory) + `.claude/settings.json` (hooks) |
 | Cursor / Windsurf / GitHub Copilot | `--target agent-rules` | `.cursorrules` + `.windsurfrules` + `.github/copilot-instructions.md` |
 
-Run `wiggum generate plan.toml --target all` to emit everything at once. See [Targets](./targets.md) for the full reference.
+Run `moloch generate plan.toml --target all` to emit everything at once. See [Targets](./targets.md) for the full reference.
 
 ## 6. Run the loop
 

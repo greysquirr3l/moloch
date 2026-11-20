@@ -12,9 +12,9 @@
 #   max_retries = 1         — refactor failures usually need human review, not blind re-runs
 #
 # Run:
-#   wiggum validate example-refactor-plan.toml
-#   wiggum check   example-refactor-plan.toml
-#   wiggum generate example-refactor-plan.toml --dry-run
+#   moloch validate example-refactor-plan.toml
+#   moloch check   example-refactor-plan.toml
+#   moloch generate example-refactor-plan.toml --dry-run
 
 # ─── Project ──────────────────────────────────────────────────────────────────
 

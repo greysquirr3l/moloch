@@ -6,7 +6,7 @@
 //! Adding a plan is enough: drop a `*.toml` into `tests/golden/`. Each plan
 //! carries its own score floor in a leading `# golden-floor: N` comment. To
 //! bump a floor after improving a plan, set N to the new `check` score (the
-//! failure message and `wiggum check <plan>` both print it). Do not lower a
+//! failure message and `moloch check <plan>` both print it). Do not lower a
 //! floor to make a failure go away; fix the plan or the generator.
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing)]
@@ -16,12 +16,12 @@ use std::path::{Path, PathBuf};
 
 use tempfile::TempDir;
 
-use wiggum::adapters::fs::FsAdapter;
-use wiggum::domain::check::score_plan;
-use wiggum::domain::dag::validate_dag;
-use wiggum::domain::plan::{Plan, ResolvedTask, validate_gates};
-use wiggum::domain::targets::TargetSet;
-use wiggum::generation;
+use moloch::adapters::fs::FsAdapter;
+use moloch::domain::check::score_plan;
+use moloch::domain::dag::validate_dag;
+use moloch::domain::plan::{Plan, ResolvedTask, validate_gates};
+use moloch::domain::targets::TargetSet;
+use moloch::generation;
 
 /// Built-in default entries of the Stop and ask section, in order. Kept
 /// literal here on purpose: the test must fail if the generator's defaults
@@ -197,7 +197,7 @@ fn check_plan(path: &Path) -> Vec<String> {
         }
     };
 
-    // Same validation `wiggum generate` runs.
+    // Same validation `moloch generate` runs.
     let resolved = match plan.resolve_tasks() {
         Ok(r) => r,
         Err(e) => {
@@ -211,7 +211,7 @@ fn check_plan(path: &Path) -> Vec<String> {
         .and_then(|()| validate_gates(&plan, &resolved))
         .and_then(|()| plan.validate_capabilities(&resolved));
     if let Err(e) = validation {
-        err(format!("plan is not valid for `wiggum generate`: {e}"));
+        err(format!("plan is not valid for `moloch generate`: {e}"));
         return errors;
     }
 

@@ -171,7 +171,7 @@ pub fn generate_all(plan: &Plan) -> Result<GeneratedArtifacts> {
 }
 
 /// Generate all artifacts using user template overrides from the project directory.
-/// Looks for `.wiggum/templates/` in `project_path`.
+/// Looks for `.moloch/templates/` in `project_path`.
 ///
 /// # Errors
 ///

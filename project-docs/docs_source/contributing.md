@@ -1,12 +1,12 @@
 # Contributing
 
-Contributions to Wiggum are welcome.
+Contributions to Moloch are welcome.
 
 ## Building from source
 
 ```bash
-git clone https://github.com/greysquirr3l/wiggum.git
-cd wiggum
+git clone https://github.com/greysquirr3l/moloch.git
+cd moloch
 cargo build
 ```
 
@@ -27,11 +27,11 @@ Stop and ask section, that every task has a command in its Exit Criteria (a
 no generated file contains an unrendered `{{` or `{%`.
 
 - **Add a plan:** drop a `*.toml` into `tests/golden/` with a leading
-  `# golden-floor: N` comment (use the score `wiggum check` reports). There is no
-  registry list. The plan must pass `wiggum generate` validation; set
+  `# golden-floor: N` comment (use the score `moloch check` reports). There is no
+  registry list. The plan must pass `moloch generate` validation; set
   `require_evaluator = false` on purpose when it has no evaluator.
 - **Bump a floor:** after improving a plan or the scorer, edit the number in that
-  plan's `# golden-floor:` line to the new `wiggum check` score. Never lower a
+  plan's `# golden-floor:` line to the new `moloch check` score. Never lower a
   floor to silence a failure; fix the plan or the generator.
 
 ## Linting

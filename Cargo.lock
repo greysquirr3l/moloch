@@ -2400,7 +2400,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "wiggum"
+name = "moloch"
 version = "0.23.0"
 dependencies = [
  "assert_cmd",

@@ -96,7 +96,7 @@ file reads required.
 
 ## Generated artifacts
 
-When the plan has one or more `[[capabilities]]`, `wiggum generate` emits:
+When the plan has one or more `[[capabilities]]`, `moloch generate` emits:
 
 | File                                     | Content                                                                                                     |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
@@ -111,7 +111,7 @@ plans that don't need contracts.
 
 ## Validation
 
-`wiggum validate` enforces structural correctness:
+`moloch validate` enforces structural correctness:
 
 - **Unknown reference** (error): `T03 references undefined capability "foo"`
   — every name in `implements = [...]` must resolve to a `[[capabilities]]`
@@ -119,7 +119,7 @@ plans that don't need contracts.
 - **Duplicate name** (error): `duplicate capability name(s): foo` — every
   capability needs a unique `name`.
 
-`wiggum validate --lint` adds softer checks:
+`moloch validate --lint` adds softer checks:
 
 | Rule                         | Severity | Trigger                                        |
 | ---------------------------- | -------- | ---------------------------------------------- |
@@ -129,10 +129,10 @@ plans that don't need contracts.
 
 ## Cleaning up
 
-`wiggum clean` removes every `capabilities/<name>.md` file that
+`moloch clean` removes every `capabilities/<name>.md` file that
 corresponds to a declared capability. The `capabilities/` directory
 itself is removed when empty afterwards — same safety rule as
-`.vscode/` and `.opencode/`: hand-written files alongside wiggum's
+`.vscode/` and `.opencode/`: hand-written files alongside moloch's
 output are preserved.
 
 ## Relationship to phases

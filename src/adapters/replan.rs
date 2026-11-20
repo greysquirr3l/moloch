@@ -6,7 +6,7 @@
 use std::path::Path;
 
 use crate::domain::plan::Plan;
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 use crate::generation::task as task_gen;
 use crate::generation::templates::get_tera;
 
@@ -22,7 +22,7 @@ use crate::generation::templates::get_tera;
 /// or the template rendering fails.
 pub fn run_replan(plan_path: &Path, task_slug: &str, dry_run: bool) -> Result<()> {
     let toml_content = std::fs::read_to_string(plan_path).map_err(|e| {
-        WiggumError::Io(std::io::Error::new(
+        MolochError::Io(std::io::Error::new(
             e.kind(),
             format!("Failed to read {}: {e}", plan_path.display()),
         ))
@@ -34,7 +34,7 @@ pub fn run_replan(plan_path: &Path, task_slug: &str, dry_run: bool) -> Result<()
         .iter()
         .position(|t| t.slug == task_slug)
         .ok_or_else(|| {
-            WiggumError::Validation(format!("task slug '{task_slug}' not found in plan"))
+            MolochError::Validation(format!("task slug '{task_slug}' not found in plan"))
         })?;
 
     // Extract failure evidence from PROGRESS.md if it exists alongside the plan.
@@ -61,7 +61,7 @@ pub fn run_replan(plan_path: &Path, task_slug: &str, dry_run: bool) -> Result<()
     // Re-resolve after augmentation
     let resolved = plan.resolve_tasks()?;
     let task = resolved.get(task_idx).ok_or_else(|| {
-        WiggumError::Validation(format!("task index {task_idx} out of range after replan"))
+        MolochError::Validation(format!("task index {task_idx} out of range after replan"))
     })?;
 
     let tera = get_tera();
@@ -77,7 +77,7 @@ pub fn run_replan(plan_path: &Path, task_slug: &str, dry_run: bool) -> Result<()
     let plan_dir = plan_path.parent().unwrap_or_else(|| Path::new("."));
     let tasks_dir = plan_dir.join("tasks");
     if !tasks_dir.is_dir() {
-        return Err(WiggumError::Validation(format!(
+        return Err(MolochError::Validation(format!(
             "tasks directory not found at {}",
             tasks_dir.display()
         )));
@@ -86,7 +86,7 @@ pub fn run_replan(plan_path: &Path, task_slug: &str, dry_run: bool) -> Result<()
     let filename = format!("T{:02}-{}.md", task.number, task.slug);
     let out_path = tasks_dir.join(&filename);
     std::fs::write(&out_path, &content).map_err(|e| {
-        WiggumError::Io(std::io::Error::new(
+        MolochError::Io(std::io::Error::new(
             e.kind(),
             format!("Failed to write {}: {e}", out_path.display()),
         ))

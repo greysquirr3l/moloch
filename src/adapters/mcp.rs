@@ -1,14 +1,14 @@
-//! The wiggum MCP server.
+//! The moloch MCP server.
 //!
 //! The protocol itself is protocol-droid's: it speaks every published spec
 //! revision — 2024-11-05 through 2026-07-28 — with a per-revision codec
-//! behind each one, so wiggum does not carry a second description of the
+//! behind each one, so moloch does not carry a second description of the
 //! wire format and cannot fall out of date with the spec.
 //!
-//! What lives here is the part that is wiggum's: the tools, the guardrails
+//! What lives here is the part that is moloch's: the tools, the guardrails
 //! applied to them, and the wiring that puts the two together. The tools
 //! live in a private `tools` module and the guardrails in a private
-//! `guardrail` module — neither is part of wiggum's public surface, because
+//! `guardrail` module — neither is part of moloch's public surface, because
 //! the public surface of an MCP server is the protocol it speaks, not the
 //! functions behind it.
 //!
@@ -44,14 +44,14 @@ use std::sync::Arc;
 use protocol_droid::application::server::{BoxFuture, RequestContext, Server, ToolHandler};
 use tracing::warn;
 
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 
 use guardrail::{
     contains_blocked_output, evaluate_session_guardrail, is_mutating_tool, redact_output_content,
     security_event, strict_guardrail_mode_enabled,
 };
 
-/// Build the wiggum MCP server.
+/// Build the moloch MCP server.
 ///
 /// The server is assembled in [`tools`], next to the tools themselves, because
 /// `#[protocol_droid::server]` expands into module-scope items that a sibling
@@ -62,7 +62,7 @@ fn build_server() -> std::result::Result<Server, protocol_droid::domain::ir::Jso
 
 /// Wrap a tool handler with the three guardrails.
 ///
-/// The wrapper is the whole of wiggum's security surface over MCP, and it
+/// The wrapper is the whole of moloch's security surface over MCP, and it
 /// sits where the hand-rolled server's `handle_tool_call` sat: after the
 /// peer has named a tool and supplied its arguments, before the tool's own
 /// body runs.
@@ -181,7 +181,7 @@ fn output_guardrail(
 ///
 /// A result is `{"content": [{"type": "text", "text": "..."}], "isError":
 /// bool}`, and the text is the only part a secret can be in — the
-/// structured content of a wiggum tool is a rendering of the same string.
+/// structured content of a moloch tool is a rendering of the same string.
 fn result_text(result: &protocol_droid::domain::ir::JsonObject) -> Option<String> {
     let value = serde_json::from_str::<serde_json::Value>(result.as_str()).ok()?;
     let content = value.get("content")?.as_array()?;
@@ -213,7 +213,7 @@ fn tool_error(message: String) -> protocol_droid::domain::ir::JsonObject {
 
 /// Serve the MCP server over stdio until the peer closes the stream.
 ///
-/// This is the whole of `wiggum serve --mcp`: the transport, the JSON-RPC
+/// This is the whole of `moloch serve --mcp`: the transport, the JSON-RPC
 /// framing, the version negotiation and the wire shapes are protocol-droid's.
 ///
 /// # Errors
@@ -222,20 +222,20 @@ fn tool_error(message: String) -> protocol_droid::domain::ir::JsonObject {
 /// when the stdio transport fails while serving.
 pub fn run_mcp_server() -> Result<()> {
     let server = build_server()
-        .map_err(|e| WiggumError::Validation(format!("failed to build MCP server: {e}")))?;
+        .map_err(|e| MolochError::Validation(format!("failed to build MCP server: {e}")))?;
 
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
-        .map_err(|e| WiggumError::Validation(format!("failed to start MCP runtime: {e}")))?;
+        .map_err(|e| MolochError::Validation(format!("failed to start MCP runtime: {e}")))?;
 
     runtime.block_on(async move {
         let report = server
             .serve_stdio()
             .await
-            .map_err(|e| WiggumError::Validation(format!("MCP server failed: {e}")))?;
+            .map_err(|e| MolochError::Validation(format!("MCP server failed: {e}")))?;
         warn!(
-            target: "wiggum::mcp",
+            target: "moloch::mcp",
             frames = report.frames,
             requests = report.requests,
             replies = report.replies,
@@ -258,25 +258,25 @@ mod tests {
 
     #[test]
     fn mutating_tools_are_the_ones_that_write() {
-        assert!(is_mutating_tool("wiggum_generate_plan"));
-        assert!(is_mutating_tool("wiggum_update_progress"));
-        assert!(is_mutating_tool("wiggum_bootstrap"));
-        assert!(is_mutating_tool("wiggum_generate_agents_md"));
+        assert!(is_mutating_tool("moloch_generate_plan"));
+        assert!(is_mutating_tool("moloch_update_progress"));
+        assert!(is_mutating_tool("moloch_bootstrap"));
+        assert!(is_mutating_tool("moloch_generate_agents_md"));
     }
 
     #[test]
     fn read_tools_are_not_mutating() {
-        assert!(!is_mutating_tool("wiggum_validate_plan"));
-        assert!(!is_mutating_tool("wiggum_lint_plan"));
-        assert!(!is_mutating_tool("wiggum_read_progress"));
-        assert!(!is_mutating_tool("wiggum_version"));
+        assert!(!is_mutating_tool("moloch_validate_plan"));
+        assert!(!is_mutating_tool("moloch_lint_plan"));
+        assert!(!is_mutating_tool("moloch_read_progress"));
+        assert!(!is_mutating_tool("moloch_version"));
     }
 
     #[test]
-    fn server_reports_wiggum_version_not_the_dependency_version() -> TestResult {
+    fn server_reports_moloch_version_not_the_dependency_version() -> TestResult {
         let server = build_server()?;
         assert_eq!(server.version(), env!("CARGO_PKG_VERSION"));
-        assert_eq!(server.name(), "wiggum");
+        assert_eq!(server.name(), "moloch");
         Ok(())
     }
 

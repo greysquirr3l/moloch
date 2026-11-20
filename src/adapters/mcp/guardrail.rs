@@ -99,10 +99,10 @@ static SESSION_GUARDRAIL_STATE: LazyLock<Mutex<SessionGuardrailState>> =
 pub fn is_mutating_tool(tool_name: &str) -> bool {
     matches!(
         tool_name,
-        "wiggum_generate_plan"
-            | "wiggum_update_progress"
-            | "wiggum_generate_agents_md"
-            | "wiggum_bootstrap"
+        "moloch_generate_plan"
+            | "moloch_update_progress"
+            | "moloch_generate_agents_md"
+            | "moloch_bootstrap"
     )
 }
 
@@ -112,7 +112,7 @@ pub fn is_mutating_tool(tool_name: &str) -> bool {
 /// marker into refusals, which is what a deployment that wants the
 /// guardrails to be a wall rather than a window sets.
 pub fn strict_guardrail_mode_enabled() -> bool {
-    std::env::var("WIGGUM_MCP_GUARDRAIL_STRICT").is_ok_and(|value| {
+    std::env::var("MOLOCH_MCP_GUARDRAIL_STRICT").is_ok_and(|value| {
         value.eq_ignore_ascii_case("1")
             || value.eq_ignore_ascii_case("true")
             || value.eq_ignore_ascii_case("yes")
@@ -130,7 +130,7 @@ pub fn evaluate_session_guardrail(tool_name: &str) -> Option<String> {
         Ok(s) => s,
         Err(poisoned) => {
             warn!(
-                target: "wiggum::mcp::security",
+                target: "moloch::mcp::security",
                 event = "session_guardrail_state_lock_failed",
                 strict_mode = strict_guardrail_mode_enabled(),
                 "MCP guardrail event"
@@ -501,7 +501,7 @@ pub fn contains_blocked_output(text: &str) -> Option<&'static str> {
 /// useful if there is a record that it happened.
 pub fn security_event(tool_name: &str, event: &str, detail: &str) {
     warn!(
-        target: "wiggum::mcp::security",
+        target: "moloch::mcp::security",
         tool = tool_name,
         event,
         detail,

@@ -11,7 +11,7 @@ test  = "cargo test --workspace"
 lint  = "cargo clippy --workspace -- -D warnings"
 ```
 
-If omitted, Wiggum uses the defaults from the selected [language profile](./language-profiles.md).
+If omitted, Moloch uses the defaults from the selected [language profile](./language-profiles.md).
 
 ### Security audit command
 
@@ -56,7 +56,7 @@ rules = [
 | `strategy` | No | `standard` | Execution strategy: `standard` (goal → implement → test → preflight), `tdd` (red → green → refactor → preflight), `gsd` (must-haves checklist → implement → verify), `complete` (root-fix end-to-end → tests including failure paths → docs update → preflight) |
 | `max_retries` | No | `2` | Maximum number of preflight-fail/retry cycles before `on_failure` is applied |
 | `on_failure` | No | `pause` | Action taken when a task exhausts `max_retries`: `pause`, `skip`, or `escalate` |
-| `model` | No | — | Recommended model identifier (e.g. `"claude-opus-4.7"`, `"gpt-5"`, `"gemini-2.5-pro"`) for the orchestrator agent itself. Rendered as a header note in `orchestrator.prompt.md`; Wiggum cannot enforce the picker choice from a prompt file. |
+| `model` | No | — | Recommended model identifier (e.g. `"claude-opus-4.7"`, `"gpt-5"`, `"gemini-2.5-pro"`) for the orchestrator agent itself. Rendered as a header note in `orchestrator.prompt.md`; Moloch cannot enforce the picker choice from a prompt file. |
 | `subagent_model` | No | — | Model identifier passed as `model:` to every `runSubagent` call the orchestrator dispatches for implementation work. Lets you run the orchestrator on a stronger model (e.g. Opus) while implementation subagents use a cheaper one (e.g. Sonnet or Haiku). |
 | `stop_when` | No | `[]` | Extra situations in which the orchestrator must stop and ask the human. Listed after the built-in defaults in the **Stop and ask** section. |
 | `rules` | No | | Project-specific rules included in each subagent prompt. Appended after the automatic security rules from the language profile. |
@@ -123,7 +123,7 @@ How each field is applied depends on the active [target](./targets.md):
 
 - **VSCode target** (default):
   - `[orchestrator] model` — rendered as a **Recommended model** header at the top
-    of `orchestrator.prompt.md`. Wiggum cannot enforce a model from a prompt file,
+    of `orchestrator.prompt.md`. Moloch cannot enforce a model from a prompt file,
     so this is a reminder to set the picker before you start the loop.
   - `[orchestrator] subagent_model` — injected into the orchestrator's instructions
     as `model: "<name>"` on every `#tool:agent/runSubagent` call dispatched for
@@ -166,11 +166,11 @@ model = "GLM 4.6 (LM Studio)"
 Practical caveats when pinning a local model as the subagent runner:
 
 - The local server must be running before the orchestrator dispatches a subagent —
-  wiggum does not start it for you.
+  moloch does not start it for you.
 - Local models typically have much smaller effective context windows than hosted
   ones. Keep `subagent_model` for narrow implementation tasks and leave the
   orchestrator on a hosted model with a large context, or shrink task scope via
-  `wiggum check` and per-task hints before running.
+  `moloch check` and per-task hints before running.
 - `runSubagent` calls the local model through the same VS Code language-model API
   as hosted providers; tool calling, parallel groups, and the preflight loop work
   the same way, but availability of advanced features depends on what the local
@@ -205,7 +205,7 @@ Use `--dry-run` to preview the generated output before running:
 
 ```bash
 # Preview what each strategy generates without writing any files
-wiggum generate plan.toml --dry-run
+moloch generate plan.toml --dry-run
 ```
 
 Change `strategy` in `[orchestrator]`, run `--dry-run`, and compare. The orchestrator prompt is the primary artifact that changes between strategies.
@@ -234,7 +234,7 @@ test_tool      = "cargo test --workspace"
 
 ## Security configuration
 
-The optional `[security]` section controls Wiggum's automatic security features.
+The optional `[security]` section controls Moloch's automatic security features.
 
 ```toml
 [security]
@@ -251,7 +251,7 @@ See [Security](./security.md) for a complete description of all three levels of 
 
 ## Integration configuration
 
-The optional `[integration]` section controls Wiggum's automatic integration audit tasks that catch common AI failure modes.
+The optional `[integration]` section controls Moloch's automatic integration audit tasks that catch common AI failure modes.
 
 ```toml
 [integration]

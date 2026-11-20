@@ -15,7 +15,7 @@ use std::process::Command;
 
 use tempfile::TempDir;
 
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 
 /// A cloned repo plus the RAII guard that owns the tempdir.
 ///
@@ -34,7 +34,7 @@ pub struct ClonedRepo {
 ///
 /// # Errors
 ///
-/// - [`WiggumError::Validation`] if `git` is not installed, the URL fails to
+/// - [`MolochError::Validation`] if `git` is not installed, the URL fails to
 ///   clone, or the resulting directory is missing the expected layout.
 pub fn clone_shallow(url: &str) -> Result<ClonedRepo> {
     run_git(&["clone", "--depth=1", "--single-branch", "--", url], None)
@@ -52,7 +52,7 @@ pub fn clone_shallow(url: &str) -> Result<ClonedRepo> {
 /// Same as [`clone_shallow`]. Additionally fails if `subdir` is empty.
 pub fn clone_sparse_subdir(url: &str, subdir: &str) -> Result<ClonedRepo> {
     if subdir.trim().is_empty() {
-        return Err(WiggumError::Validation(
+        return Err(MolochError::Validation(
             "subdir must be a non-empty path".to_string(),
         ));
     }
@@ -60,7 +60,7 @@ pub fn clone_sparse_subdir(url: &str, subdir: &str) -> Result<ClonedRepo> {
     // as an option rather than a path. The subdir can come from the URL, so
     // it is checked rather than assumed.
     if subdir.starts_with('-') {
-        return Err(WiggumError::Validation(format!(
+        return Err(MolochError::Validation(format!(
             "subdir must not start with '-': {subdir}"
         )));
     }
@@ -85,12 +85,12 @@ pub fn clone_sparse_subdir(url: &str, subdir: &str) -> Result<ClonedRepo> {
         .current_dir(&cloned.path)
         .status()
         .map_err(|e| {
-            WiggumError::Validation(format!("failed to invoke `git sparse-checkout`: {e}"))
+            MolochError::Validation(format!("failed to invoke `git sparse-checkout`: {e}"))
         })?;
 
     if !status.success() {
         let code = status.code().unwrap_or(-1);
-        return Err(WiggumError::Validation(format!(
+        return Err(MolochError::Validation(format!(
             "`git sparse-checkout set {subdir}` exited with status {code}"
         )));
     }
@@ -111,7 +111,7 @@ pub fn clone_sparse_subdir(url: &str, subdir: &str) -> Result<ClonedRepo> {
 /// `cwd` overrides the current directory when needed.
 fn run_git(args: &[&str], cwd: Option<&std::path::Path>) -> Result<ClonedRepo> {
     let guard = TempDir::new()
-        .map_err(|e| WiggumError::Validation(format!("create tempdir for clone: {e}")))?;
+        .map_err(|e| MolochError::Validation(format!("create tempdir for clone: {e}")))?;
 
     let mut cmd = Command::new("git");
     cmd.args(args);
@@ -120,14 +120,14 @@ fn run_git(args: &[&str], cwd: Option<&std::path::Path>) -> Result<ClonedRepo> {
         cmd.current_dir(dir);
     }
     let status = cmd.status().map_err(|e| {
-        WiggumError::Validation(format!(
+        MolochError::Validation(format!(
             "failed to invoke `git {}`: {e}. Is git installed and on PATH?",
             args.join(" ")
         ))
     })?;
     if !status.success() {
         let code = status.code().unwrap_or(-1);
-        return Err(WiggumError::Validation(format!(
+        return Err(MolochError::Validation(format!(
             "`git {}` exited with status {code}. Check the URL and your credentials.",
             args.join(" ")
         )));
@@ -135,7 +135,7 @@ fn run_git(args: &[&str], cwd: Option<&std::path::Path>) -> Result<ClonedRepo> {
 
     let path = guard.path().to_path_buf();
     if !path.is_dir() {
-        return Err(WiggumError::Validation(
+        return Err(MolochError::Validation(
             "git produced no directory — output was empty?".to_string(),
         ));
     }

@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[derive(Debug, Error)]
-pub enum WiggumError {
+pub enum MolochError {
     #[error("plan parse error: {0}")]
     PlanParse(String),
 
@@ -36,4 +36,4 @@ pub enum WiggumError {
     Json(#[from] serde_json::Error),
 }
 
-pub type Result<T> = std::result::Result<T, WiggumError>;
+pub type Result<T> = std::result::Result<T, MolochError>;

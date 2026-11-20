@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Pre-commit hook for wiggum
+# Pre-commit hook for moloch
 # Runs cargo fmt, gitleaks, and cargo audit before allowing commits
 
 set -e

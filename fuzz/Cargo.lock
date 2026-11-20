@@ -1466,7 +1466,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "wiggum"
+name = "moloch"
 version = "0.16.1"
 dependencies = [
  "anyhow",
@@ -1487,11 +1487,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "wiggum-fuzz"
+name = "moloch-fuzz"
 version = "0.0.0"
 dependencies = [
  "libfuzzer-sys",
- "wiggum",
+ "moloch",
 ]
 
 [[package]]

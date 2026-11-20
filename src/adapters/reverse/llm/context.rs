@@ -11,7 +11,7 @@ use serde::Serialize;
 
 use crate::adapters::bootstrap::ScanResult;
 use crate::adapters::reverse::hints::Hints;
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 
 /// Maximum bytes of README to include. Anthropic-Messages has a 1M context
 /// window (with the right model) but bigger inputs cost more and slow the
@@ -71,7 +71,7 @@ pub fn gather_context(
     hints: Option<&Hints>,
 ) -> Result<LlmContext> {
     if !repo_path.is_dir() {
-        return Err(WiggumError::Validation(format!(
+        return Err(MolochError::Validation(format!(
             "context gather: not a directory: {}",
             repo_path.display()
         )));
@@ -106,7 +106,7 @@ fn walk_tree(dir: &Path, depth: usize, max_depth: usize, out: &mut String) -> Re
         return Ok(());
     }
     let entries = std::fs::read_dir(dir)
-        .map_err(|e| WiggumError::Validation(format!("read_dir {}: {e}", dir.display())))?;
+        .map_err(|e| MolochError::Validation(format!("read_dir {}: {e}", dir.display())))?;
     let mut sorted: Vec<_> = entries.flatten().collect();
     sorted.sort_by_key(std::fs::DirEntry::file_name);
 
@@ -120,7 +120,7 @@ fn walk_tree(dir: &Path, depth: usize, max_depth: usize, out: &mut String) -> Re
 
         let indent = "  ".repeat(depth);
         let file_type = entry.file_type().map_err(|e| {
-            WiggumError::Validation(format!("file_type {}: {e}", entry.path().display()))
+            MolochError::Validation(format!("file_type {}: {e}", entry.path().display()))
         })?;
 
         if file_type.is_dir() {
@@ -150,7 +150,7 @@ fn read_readme_excerpt(repo_path: &Path, max_bytes: usize) -> Result<String> {
         let path = repo_path.join(name);
         if path.is_file() {
             let raw = std::fs::read(&path)
-                .map_err(|e| WiggumError::Validation(format!("read {}: {e}", path.display())))?;
+                .map_err(|e| MolochError::Validation(format!("read {}: {e}", path.display())))?;
             // Truncate at a clean UTF-8 boundary — use str::is_char_boundary
             // on the lossy-decoded string.
             let s = String::from_utf8_lossy(&raw);

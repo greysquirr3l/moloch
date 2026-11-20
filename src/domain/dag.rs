@@ -3,7 +3,7 @@ use petgraph::graph::DiGraph;
 use std::collections::HashMap;
 
 use crate::domain::plan::ResolvedTask;
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 
 /// Validates that the task dependency graph is a DAG (no cycles).
 /// Returns topologically sorted task slugs if valid.
@@ -16,13 +16,13 @@ pub fn validate_dag(tasks: &[ResolvedTask]) -> Result<Vec<String>> {
 
     if is_cyclic_directed(&graph) {
         let cycle_desc = find_cycle_description(&graph, &slug_to_node);
-        return Err(WiggumError::CycleDetected(cycle_desc));
+        return Err(MolochError::CycleDetected(cycle_desc));
     }
 
     // Topological sort
     let sorted = petgraph::algo::toposort(&graph, None).map_err(|e| {
         let node = graph.node_weight(e.node_id()).copied().unwrap_or("unknown");
-        WiggumError::CycleDetected(format!("cycle involves task: {node}"))
+        MolochError::CycleDetected(format!("cycle involves task: {node}"))
     })?;
 
     Ok(sorted
@@ -46,14 +46,14 @@ pub fn parallel_groups(tasks: &[ResolvedTask]) -> Result<Vec<Vec<String>>> {
 
     if is_cyclic_directed(&graph) {
         let cycle_desc = find_cycle_description(&graph, &HashMap::new());
-        return Err(WiggumError::CycleDetected(cycle_desc));
+        return Err(MolochError::CycleDetected(cycle_desc));
     }
 
     // Compute depth for each node: longest path from any root
     let mut depth: HashMap<petgraph::graph::NodeIndex, usize> = HashMap::new();
     let sorted = petgraph::algo::toposort(&graph, None).map_err(|e| {
         let node = graph[e.node_id()];
-        WiggumError::CycleDetected(format!("cycle involves task: {node}"))
+        MolochError::CycleDetected(format!("cycle involves task: {node}"))
     })?;
 
     for &node in &sorted {
@@ -100,7 +100,7 @@ fn build_graph(tasks: &[ResolvedTask]) -> Result<DagResult<'_>> {
             let dep_node =
                 *slug_to_node
                     .get(dep.as_str())
-                    .ok_or_else(|| WiggumError::UnknownDependency {
+                    .ok_or_else(|| MolochError::UnknownDependency {
                         referenced: dep.clone(),
                         referencing: task.slug.clone(),
                     })?;

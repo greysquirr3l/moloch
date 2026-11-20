@@ -1,6 +1,6 @@
 # Strict Standards
 
-Beyond the language-specific security rules that every plan inherits, Wiggum offers an opt-in **strict mode** that injects a richer, harder-to-satisfy rule set into every prompt. Strict mode is for projects where "the build passes" is not enough — every commit must produce code that complies with a verified-modern toolchain baseline for the target language.
+Beyond the language-specific security rules that every plan inherits, Moloch offers an opt-in **strict mode** that injects a richer, harder-to-satisfy rule set into every prompt. Strict mode is for projects where "the build passes" is not enough — every commit must produce code that complies with a verified-modern toolchain baseline for the target language.
 
 ## Enabling strict mode
 
@@ -27,7 +27,7 @@ strict = false
 
 Each language profile defines a `strict_rules` array that is injected as a new section in the generated prompts only when `strict = true`. The rules are language-specific but share a common theme: they encode the modern, security-centric baseline that the language's toolchain makes possible when fully engaged.
 
-For Rust, strict mode mirrors the rules in your project's `nick-v2.md` (the personal standards file; supersedes the original `nick.md`). New rules are sourced from the Rust 1.78→1.99 catchup guide at `~/Projects/rust/rust-docs/rust-catchup-1.78-1.99.md`. For every other language, the ruleset is documented in the companion file `docs/strict-lints.md` at the root of the wiggum repo.
+For Rust, strict mode mirrors the rules in your project's `nick-v2.md` (the personal standards file; supersedes the original `nick.md`). New rules are sourced from the Rust 1.78→1.99 catchup guide at `~/Projects/rust/rust-docs/rust-catchup-1.78-1.99.md`. For every other language, the ruleset is documented in the companion file `docs/strict-lints.md` at the root of the moloch repo.
 
 ## What strict mode adds for Rust (1.95+)
 
@@ -181,8 +181,8 @@ Enable `strict = true` when:
 
 Leave `strict = false` (the default) when:
 
-- You're prototyping or evaluating wiggum itself
+- You're prototyping or evaluating moloch itself
 - The codebase predates the strict toolchain baseline (e.g. a Python 2 codebase)
 - You need fast iteration and are willing to clean up later
 
-Strict mode is additive, not destructive. You can flip `strict = true` on an existing plan at any time — the next `wiggum generate` injects the new rules into all subagent prompts without altering task content, hints, or preflight commands.
+Strict mode is additive, not destructive. You can flip `strict = true` on an existing plan at any time — the next `moloch generate` injects the new rules into all subagent prompts without altering task content, hints, or preflight commands.

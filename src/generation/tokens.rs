@@ -141,7 +141,7 @@ pub fn format_report(
     lines.push(String::new());
     lines.push("  Prices are estimates. Actual cost depends on completion length.".to_string());
     lines.push(format!(
-        "  Last updated: {}. Run `wiggum prices` to see rates.",
+        "  Last updated: {}. Run `moloch prices` to see rates.",
         pricing.last_updated
     ));
 
