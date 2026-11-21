@@ -13,7 +13,7 @@ categories = ["command-line-utilities", "development-tools"]
 # Cargo refuses to publish while this is `false`, which keeps the crate off
 # crates.io until the rename, the new repository URL and the release
 # workflow are all in place. Set to `true` (or a registry list) to re-enable.
-publish = false
+publish = true
 
 [lints.clippy]
 # Lint groups

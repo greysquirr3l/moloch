@@ -1009,6 +1009,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "moloch"
+version = "0.23.0"
+dependencies = [
+ "assert_cmd",
+ "async-trait",
+ "clap",
+ "dialoguer",
+ "dirs",
+ "petgraph",
+ "predicates",
+ "protocol-droid",
+ "regex",
+ "reqwest",
+ "schemars",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tera",
+ "thiserror",
+ "tokio",
+ "toml",
+ "toml_edit",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "normalize-line-endings"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2397,33 +2424,6 @@ checksum = "5a6580f308b1fad9207618087a65c04e7a10bc77e02c8e84e9b00dd4b12fa0bb"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
-]
-
-[[package]]
-name = "moloch"
-version = "0.23.0"
-dependencies = [
- "assert_cmd",
- "async-trait",
- "clap",
- "dialoguer",
- "dirs",
- "petgraph",
- "predicates",
- "protocol-droid",
- "regex",
- "reqwest",
- "schemars",
- "serde",
- "serde_json",
- "tempfile",
- "tera",
- "thiserror",
- "tokio",
- "toml",
- "toml_edit",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]
