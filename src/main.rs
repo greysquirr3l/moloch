@@ -12,22 +12,22 @@ use std::process;
 use clap::Parser;
 use tracing::{error, info};
 
-use wiggum::adapters::cli::{Cli, Command, PatternsAction, TemplatesCmd};
-use wiggum::adapters::fs::FsAdapter;
-use wiggum::adapters::mcp;
-use wiggum::adapters::vcs;
-use wiggum::adapters::{
+use moloch::adapters::cli::{Cli, Command, PatternsAction, TemplatesCmd};
+use moloch::adapters::fs::FsAdapter;
+use moloch::adapters::mcp;
+use moloch::adapters::vcs;
+use moloch::adapters::{
     bootstrap, diff, init, patterns, replan, resume, retro, reverse, split, templates,
 };
-use wiggum::domain::check;
-use wiggum::domain::dag::{parallel_groups, validate_dag};
-use wiggum::domain::lint;
-use wiggum::domain::plan::{Plan, validate_gates};
-use wiggum::domain::pricing::PricingData;
-use wiggum::domain::targets::{Target, TargetSet};
-use wiggum::error::WiggumError;
-use wiggum::generation;
-use wiggum::ports::PlanReader;
+use moloch::domain::check;
+use moloch::domain::dag::{parallel_groups, validate_dag};
+use moloch::domain::lint;
+use moloch::domain::plan::{Plan, validate_gates};
+use moloch::domain::pricing::PricingData;
+use moloch::domain::targets::{Target, TargetSet};
+use moloch::error::MolochError;
+use moloch::generation;
+use moloch::ports::PlanReader;
 
 #[derive(Clone, Copy)]
 enum VcsWarningMode {
@@ -90,10 +90,10 @@ fn main() {
         ),
         Command::Validate { plan, lint } => cmd_validate(&plan, lint),
         Command::Serve { mcp: true } => {
-            info!("Starting wiggum MCP server (stdio)");
+            info!("Starting moloch MCP server (stdio)");
             mcp::run_mcp_server()
         }
-        Command::Serve { mcp: false } => Err(WiggumError::Validation(
+        Command::Serve { mcp: false } => Err(MolochError::Validation(
             "Use --mcp flag to start the MCP server".to_string(),
         )),
         Command::Report {
@@ -156,8 +156,8 @@ fn main() {
         Command::Templates(sub) => cmd_templates(sub),
         Command::Prices { update } => cmd_prices(update),
         Command::Version => {
-            let git_sha = option_env!("WIGGUM_GIT_SHA").unwrap_or("unknown");
-            println!("wiggum {} ({git_sha})", env!("CARGO_PKG_VERSION"));
+            let git_sha = option_env!("MOLOCH_GIT_SHA").unwrap_or("unknown");
+            println!("moloch {} ({git_sha})", env!("CARGO_PKG_VERSION"));
             Ok(())
         }
         Command::Replan {
@@ -174,24 +174,24 @@ fn main() {
     }
 }
 
-fn cmd_init(plan_path: Option<&Path>) -> wiggum::error::Result<()> {
+fn cmd_init(plan_path: Option<&Path>) -> moloch::error::Result<()> {
     let (_plan, path) = init::run_init(plan_path)?;
     println!(
-        "\nRun `wiggum generate {}` to generate scaffold artifacts.",
+        "\nRun `moloch generate {}` to generate scaffold artifacts.",
         path.display()
     );
     Ok(())
 }
 
-fn cmd_add_task(plan_path: &Path) -> wiggum::error::Result<()> {
-    wiggum::adapters::add_task::run_add_task(plan_path)
+fn cmd_add_task(plan_path: &Path) -> moloch::error::Result<()> {
+    moloch::adapters::add_task::run_add_task(plan_path)
 }
 
 fn cmd_generate(
     plan_path: &Path,
     output_override: Option<&std::path::Path>,
     opts: &GenerateOptions,
-) -> wiggum::error::Result<()> {
+) -> moloch::error::Result<()> {
     let fs = FsAdapter;
     let toml_content = fs.read_plan(plan_path)?;
     let plan = Plan::from_toml(&toml_content)?;
@@ -211,7 +211,7 @@ fn cmd_generate(
         }
         targets = TargetSet::none();
     } else if targets.is_empty() {
-        return Err(WiggumError::Validation(
+        return Err(MolochError::Validation(
             "no target selected — at least one of vscode/opencode/claude must be enabled"
                 .to_string(),
         ));
@@ -236,7 +236,7 @@ fn cmd_generate(
     // scaffold time. The user can ignore; the loop cannot.
     if plan.evaluator.is_none()
         && !plan.orchestrator.require_evaluator.unwrap_or(true)
-        && wiggum::domain::plan::auto_derive_require_evaluator(&resolved)
+        && moloch::domain::plan::auto_derive_require_evaluator(&resolved)
     {
         eprintln!(
             "⚠️  evaluator skipped against policy: this plan would normally require an [evaluator] \
@@ -278,7 +278,7 @@ fn cmd_generate(
     let score = check::score_plan(&plan, &resolved);
     println!(
         "{}",
-        wiggum::domain::hints::first_command_hint(&plan, &score)
+        moloch::domain::hints::first_command_hint(&plan, &score)
     );
 
     if opts.dry_run {
@@ -315,7 +315,7 @@ fn cmd_generate(
 /// spec. Suppressed when `no_summary` is set.
 fn print_check_summary(
     plan: &Plan,
-    resolved: &[wiggum::domain::plan::ResolvedTask],
+    resolved: &[moloch::domain::plan::ResolvedTask],
     no_summary: bool,
 ) {
     if no_summary {
@@ -327,10 +327,10 @@ fn print_check_summary(
 }
 
 /// Resolve the active `TargetSet` from CLI override and the plan.
-fn resolve_targets(plan: &Plan, cli_override: Option<&str>) -> wiggum::error::Result<TargetSet> {
+fn resolve_targets(plan: &Plan, cli_override: Option<&str>) -> moloch::error::Result<TargetSet> {
     if let Some(cli) = cli_override {
         return TargetSet::from_cli_str(cli)
-            .map_err(|e| WiggumError::Validation(format!("--target: {e}")));
+            .map_err(|e| MolochError::Validation(format!("--target: {e}")));
     }
     Ok(plan.targets.resolve())
 }
@@ -404,7 +404,7 @@ fn print_success(
     }
     if targets.contains(Target::Opencode) {
         println!("  2. In opencode: open the folder — the `orchestrator` agent is auto-discovered");
-        println!("     Run `wiggum watch` in a separate terminal to monitor progress.");
+        println!("     Run `moloch watch` in a separate terminal to monitor progress.");
         println!("     Read ORCHESTRATOR.md at the project root for the full workflow reference.");
     }
     if targets.contains(Target::Claude) {
@@ -423,10 +423,10 @@ fn print_success(
 fn print_dry_run(
     artifacts: &generation::GeneratedArtifacts,
     project_path: &Path,
-    resolved: &[wiggum::domain::plan::ResolvedTask],
+    resolved: &[moloch::domain::plan::ResolvedTask],
     targets: TargetSet,
     estimate_tokens: bool,
-) -> wiggum::error::Result<()> {
+) -> moloch::error::Result<()> {
     println!("Dry run — would generate:\n");
     println!(
         "  PROGRESS.md             ({:.1} KB)",
@@ -549,7 +549,7 @@ fn artifact_totals(
     artifacts: &generation::GeneratedArtifacts,
     targets: TargetSet,
 ) -> (usize, usize) {
-    use wiggum::domain::targets::Target;
+    use moloch::domain::targets::Target;
 
     let mut size = artifacts.progress.len()
         + artifacts.plan_doc.len()
@@ -590,7 +590,7 @@ fn artifact_totals(
     (size, files)
 }
 
-fn cmd_validate(plan_path: &Path, run_lint: bool) -> wiggum::error::Result<()> {
+fn cmd_validate(plan_path: &Path, run_lint: bool) -> moloch::error::Result<()> {
     let fs = FsAdapter;
     let toml_content = fs.read_plan(plan_path)?;
     let plan = Plan::from_toml(&toml_content)?;
@@ -618,7 +618,7 @@ fn cmd_validate(plan_path: &Path, run_lint: bool) -> wiggum::error::Result<()> {
         // Anchor drift checks need filesystem access, so they run separately
         // from the pure `lint_plan` rules. No-ops when the plan has no anchors.
         let root = PathBuf::from(&plan.project.path);
-        diagnostics.extend(wiggum::domain::anchors::lint_anchors(&resolved, &root));
+        diagnostics.extend(moloch::domain::anchors::lint_anchors(&resolved, &root));
         diagnostics.sort_by_key(|d| std::cmp::Reverse(d.severity));
 
         if diagnostics.is_empty() {
@@ -635,24 +635,24 @@ fn cmd_validate(plan_path: &Path, run_lint: bool) -> wiggum::error::Result<()> {
     Ok(())
 }
 
-fn cmd_report(progress_path: &Path, project_dir: Option<&Path>) -> wiggum::error::Result<()> {
+fn cmd_report(progress_path: &Path, project_dir: Option<&Path>) -> moloch::error::Result<()> {
     let content = std::fs::read_to_string(progress_path)?;
 
-    let report = wiggum::domain::report::generate_report(&content, project_dir);
-    println!("{}", wiggum::domain::report::format_report(&report));
+    let report = moloch::domain::report::generate_report(&content, project_dir);
+    println!("{}", moloch::domain::report::format_report(&report));
 
     Ok(())
 }
 
-fn cmd_watch(progress_path: &Path, poll_ms: u64, stall_secs: u64) -> wiggum::error::Result<()> {
-    wiggum::adapters::watch::run_watch(progress_path, poll_ms, stall_secs)
+fn cmd_watch(progress_path: &Path, poll_ms: u64, stall_secs: u64) -> moloch::error::Result<()> {
+    moloch::adapters::watch::run_watch(progress_path, poll_ms, stall_secs)
 }
 
 fn cmd_bootstrap(
     project_path: &Path,
     output: Option<&Path>,
     force: bool,
-) -> wiggum::error::Result<()> {
+) -> moloch::error::Result<()> {
     bootstrap::run_bootstrap(project_path, output, force)?;
     Ok(())
 }
@@ -669,7 +669,7 @@ fn cmd_reverse(
     llm: Option<String>,
     llm_model: Option<String>,
     api_key: Option<String>,
-) -> wiggum::error::Result<()> {
+) -> moloch::error::Result<()> {
     let opts = reverse::ReverseOptions {
         url: url.to_string(),
         hints: hints.map(Path::to_path_buf),
@@ -690,7 +690,7 @@ fn cmd_clean(
     plan_path: &Path,
     output_override: Option<&Path>,
     dry_run: bool,
-) -> wiggum::error::Result<()> {
+) -> moloch::error::Result<()> {
     let fs = FsAdapter;
     let toml_content = fs.read_plan(plan_path)?;
     let plan = Plan::from_toml(&toml_content)?;
@@ -746,7 +746,7 @@ fn cmd_resume(
     plan_path: &Path,
     task_override: Option<&str>,
     dry_run: bool,
-) -> wiggum::error::Result<()> {
+) -> moloch::error::Result<()> {
     let ctx = resume::find_resume_task(progress_path, plan_path, task_override)?;
 
     println!("{}", resume::format_resume_info(&ctx, dry_run));
@@ -760,13 +760,13 @@ fn cmd_resume(
     Ok(())
 }
 
-fn cmd_diff(old_path: &Path, new_path: &Path) -> wiggum::error::Result<()> {
+fn cmd_diff(old_path: &Path, new_path: &Path) -> moloch::error::Result<()> {
     let changes = diff::diff_plans(old_path, new_path)?;
     println!("{}", diff::format_diff(&changes));
     Ok(())
 }
 
-fn cmd_check(plan_path: &Path, json: bool) -> wiggum::error::Result<()> {
+fn cmd_check(plan_path: &Path, json: bool) -> moloch::error::Result<()> {
     let fs = FsAdapter;
     let toml_content = fs.read_plan(plan_path)?;
     let plan = Plan::from_toml(&toml_content)?;
@@ -780,7 +780,7 @@ fn cmd_check(plan_path: &Path, json: bool) -> wiggum::error::Result<()> {
     }
 
     if !score.is_healthy() {
-        return Err(WiggumError::PlanUnhealthy {
+        return Err(MolochError::PlanUnhealthy {
             score: score.overall,
         });
     }
@@ -792,7 +792,7 @@ fn cmd_retro(
     _apply: bool,
     plan_path: &Path,
     save: bool,
-) -> wiggum::error::Result<()> {
+) -> moloch::error::Result<()> {
     let summary = retro::analyze_progress(progress_path)?;
     println!("{}", retro::format_retro(&summary));
 
@@ -801,7 +801,7 @@ fn cmd_retro(
         let toml_content = fs.read_plan(plan_path)?;
         let plan = Plan::from_toml(&toml_content)?;
         let patterns_dir = patterns::default_patterns_dir().ok_or_else(|| {
-            WiggumError::Validation("Cannot determine home directory".to_string())
+            MolochError::Validation("Cannot determine home directory".to_string())
         })?;
         let path = patterns::save_from_retro(&summary, &plan, &patterns_dir)?;
         println!("\n✅ Pattern saved to {}", path.display());
@@ -810,15 +810,15 @@ fn cmd_retro(
     Ok(())
 }
 
-fn cmd_patterns(action: PatternsAction) -> wiggum::error::Result<()> {
+fn cmd_patterns(action: PatternsAction) -> moloch::error::Result<()> {
     let patterns_dir = patterns::default_patterns_dir()
-        .ok_or_else(|| WiggumError::Validation("Cannot determine home directory".to_string()))?;
+        .ok_or_else(|| MolochError::Validation("Cannot determine home directory".to_string()))?;
 
     match action {
         PatternsAction::List => {
             let list = patterns::list(&patterns_dir)?;
             if list.is_empty() {
-                println!("No patterns saved yet. Run `wiggum retro --save` to capture learnings.");
+                println!("No patterns saved yet. Run `moloch retro --save` to capture learnings.");
             } else {
                 println!("Saved patterns ({}):\n", list.len());
                 for p in &list {
@@ -855,7 +855,7 @@ fn cmd_patterns(action: PatternsAction) -> wiggum::error::Result<()> {
     Ok(())
 }
 
-fn cmd_split(plan_path: &Path, task_slug: &str, into: Option<u32>) -> wiggum::error::Result<()> {
+fn cmd_split(plan_path: &Path, task_slug: &str, into: Option<u32>) -> moloch::error::Result<()> {
     let analysis = split::analyze_task(plan_path, task_slug)?;
 
     if let Some(n) = into {
@@ -866,7 +866,7 @@ fn cmd_split(plan_path: &Path, task_slug: &str, into: Option<u32>) -> wiggum::er
             return Ok(());
         }
         println!("\nNon-interactive split into {n} tasks not yet implemented.");
-        println!("Use interactive mode: `wiggum split --task {task_slug}`");
+        println!("Use interactive mode: `moloch split --task {task_slug}`");
     } else {
         // Interactive mode
         let split_plan = split::run_interactive_split(plan_path, task_slug)?;
@@ -892,7 +892,7 @@ fn cmd_split(plan_path: &Path, task_slug: &str, into: Option<u32>) -> wiggum::er
         } else {
             split::apply_split(plan_path, &split_plan)?;
             println!(
-                "✅ plan.toml updated. Run `wiggum validate {}` to verify.",
+                "✅ plan.toml updated. Run `moloch validate {}` to verify.",
                 plan_path.display()
             );
         }
@@ -901,7 +901,7 @@ fn cmd_split(plan_path: &Path, task_slug: &str, into: Option<u32>) -> wiggum::er
     Ok(())
 }
 
-fn cmd_templates(cmd: TemplatesCmd) -> wiggum::error::Result<()> {
+fn cmd_templates(cmd: TemplatesCmd) -> moloch::error::Result<()> {
     match cmd {
         TemplatesCmd::List => {
             let list = templates::list_templates()?;
@@ -920,7 +920,7 @@ fn cmd_templates(cmd: TemplatesCmd) -> wiggum::error::Result<()> {
 }
 
 #[allow(clippy::unnecessary_wraps)] // May add error cases in the future
-fn cmd_prices(update: bool) -> wiggum::error::Result<()> {
+fn cmd_prices(update: bool) -> moloch::error::Result<()> {
     let data = PricingData::bundled();
 
     if update {

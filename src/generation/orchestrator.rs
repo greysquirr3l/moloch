@@ -4,7 +4,8 @@ use crate::domain::{
     dag,
     plan::{Plan, ResolvedTask},
 };
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
+use crate::generation::stop_section::insert_stop_section;
 use crate::generation::templates::get_tera;
 
 /// Render the orchestrator prompt using the default template.
@@ -43,6 +44,8 @@ pub fn render_with(tera: &Tera, plan: &Plan, tasks: &[ResolvedTask]) -> Result<S
         &plan.evaluator.as_ref().and_then(|e| e.model.clone()),
     );
     ctx.insert("has_evaluator", &plan.evaluator.is_some());
+    insert_verify_tasks(&mut ctx, tasks);
+    insert_stop_section(&mut ctx, plan);
 
     // Security rules from the language profile, always injected.
     let profile = plan.project.language.profile();
@@ -81,7 +84,22 @@ pub fn render_with(tera: &Tera, plan: &Plan, tasks: &[ResolvedTask]) -> Result<S
     ctx.insert("contract_review", &contract_review);
 
     tera.render("orchestrator.md", &ctx)
-        .map_err(|e| WiggumError::Template(e.to_string()))
+        .map_err(|e| MolochError::Template(e.to_string()))
+}
+
+/// Expose each task's `verify` commands so step 8 can name them.
+fn insert_verify_tasks(ctx: &mut Context, tasks: &[ResolvedTask]) {
+    let verify_tasks: Vec<serde_json::Value> = tasks
+        .iter()
+        .filter(|t| !t.verify.is_empty())
+        .map(|t| {
+            serde_json::json!({
+                "number": format!("{:02}", t.number),
+                "commands": t.verify,
+            })
+        })
+        .collect();
+    ctx.insert("verify_tasks", &verify_tasks);
 }
 
 /// Render the opencode orchestrator agent prompt (`orchestrator.md`).
@@ -123,6 +141,8 @@ pub fn render_opencode_with(tera: &Tera, plan: &Plan, tasks: &[ResolvedTask]) ->
         &plan.evaluator.as_ref().and_then(|e| e.model.clone()),
     );
     ctx.insert("has_evaluator", &plan.evaluator.is_some());
+    insert_verify_tasks(&mut ctx, tasks);
+    insert_stop_section(&mut ctx, plan);
 
     // Completion standard — travels verbatim with every subagent dispatch
     // alongside Accumulated Learnings and Codebase State.
@@ -159,7 +179,7 @@ pub fn render_opencode_with(tera: &Tera, plan: &Plan, tasks: &[ResolvedTask]) ->
     ctx.insert("parallel_groups", &groups_value);
 
     tera.render("orchestrator_opencode.md", &ctx)
-        .map_err(|e| WiggumError::Template(e.to_string()))
+        .map_err(|e| MolochError::Template(e.to_string()))
 }
 
 /// Render the root-level `ORCHESTRATOR.md` workflow reference document.
@@ -198,6 +218,8 @@ pub fn render_orchestrator_root_with(
     ctx.insert("max_retries", &plan.orchestrator.max_retries);
     ctx.insert("on_failure", &plan.orchestrator.on_failure.to_string());
     ctx.insert("has_evaluator", &plan.evaluator.is_some());
+    insert_verify_tasks(&mut ctx, tasks);
+    insert_stop_section(&mut ctx, plan);
 
     let completion_standard = plan.style.resolved_completion_standard();
     ctx.insert("completion_standard", &completion_standard);
@@ -224,7 +246,7 @@ pub fn render_orchestrator_root_with(
     // a wrong path would send people to a non-existent file.
 
     tera.render("orchestrator_root.md", &ctx).map_err(|e| {
-        WiggumError::Template(format!("Failed to render 'orchestrator_root.md': {e:?}"))
+        MolochError::Template(format!("Failed to render 'orchestrator_root.md': {e:?}"))
     })
 }
 

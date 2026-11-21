@@ -43,7 +43,7 @@ mod tests {
 
     #[test]
     fn non_existent_dir_is_not_a_repo() {
-        let path = PathBuf::from("/tmp/wiggum-nonexistent-dir-test");
+        let path = PathBuf::from("/tmp/moloch-nonexistent-dir-test");
         assert!(matches!(check_vcs_status(&path), VcsStatus::NotARepo));
     }
 }

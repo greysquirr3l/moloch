@@ -1,5 +1,6 @@
 pub mod agent_rules;
 pub mod agents_md;
+pub(crate) mod approvals;
 pub mod background_auditor;
 pub mod budget;
 pub mod capability;
@@ -13,6 +14,7 @@ pub mod plan_doc;
 pub mod planner;
 pub mod progress;
 pub mod run_log;
+pub(crate) mod stop_section;
 pub mod task;
 pub(crate) mod templates;
 pub mod tokens;
@@ -169,7 +171,7 @@ pub fn generate_all(plan: &Plan) -> Result<GeneratedArtifacts> {
 }
 
 /// Generate all artifacts using user template overrides from the project directory.
-/// Looks for `.wiggum/templates/` in `project_path`.
+/// Looks for `.moloch/templates/` in `project_path`.
 ///
 /// # Errors
 ///

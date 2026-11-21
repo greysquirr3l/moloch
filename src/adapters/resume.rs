@@ -5,7 +5,7 @@ use std::path::Path;
 use crate::adapters::fs::FsAdapter;
 use crate::domain::plan::Plan;
 use crate::domain::report::{TaskStatus, parse_progress};
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 use crate::generation::task;
 use crate::ports::PlanReader;
 
@@ -32,7 +32,7 @@ pub fn find_resume_task(
 
     // Read progress file
     let progress_content = std::fs::read_to_string(progress_path).map_err(|e| {
-        WiggumError::Io(std::io::Error::new(
+        MolochError::Io(std::io::Error::new(
             e.kind(),
             format!("Failed to read {}: {}", progress_path.display(), e),
         ))
@@ -46,7 +46,7 @@ pub fn find_resume_task(
             .tasks
             .iter()
             .find(|t| t.id.ends_with(&format!("-{slug}")) || t.title.to_lowercase().contains(slug))
-            .ok_or_else(|| WiggumError::Validation(format!("Task '{slug}' not found")))?
+            .ok_or_else(|| MolochError::Validation(format!("Task '{slug}' not found")))?
     } else {
         // Auto-detect: find in-progress or last completed
         summary
@@ -70,7 +70,7 @@ pub fn find_resume_task(
                     .find(|t| t.status == TaskStatus::NotStarted)
             })
             .ok_or_else(|| {
-                WiggumError::Validation(
+                MolochError::Validation(
                     "No resumable task found — all tasks may be completed".into(),
                 )
             })?
@@ -88,7 +88,7 @@ pub fn find_resume_task(
         .iter()
         .find(|t| t.number == task_number)
         .ok_or_else(|| {
-            WiggumError::Validation(format!("Task T{task_number:02} not found in plan"))
+            MolochError::Validation(format!("Task T{task_number:02} not found in plan"))
         })?;
 
     // Generate the task prompt with resume preamble

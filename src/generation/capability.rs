@@ -34,7 +34,7 @@ pub fn render_all(plan: &Plan) -> Result<Vec<(String, String)>> {
             ctx.insert("scenarios", &cap.scenarios);
             let content = tera
                 .render("capability.md", &ctx)
-                .map_err(|e| crate::error::WiggumError::Template(e.to_string()))?;
+                .map_err(|e| crate::error::MolochError::Template(e.to_string()))?;
             Ok((format!("{}.md", cap.name), content))
         })
         .collect()
@@ -56,7 +56,7 @@ pub fn render_with(tera: &Tera, plan: &Plan, capability_name: &str) -> Result<Op
     ctx.insert("scenarios", &cap.scenarios);
     let content = tera
         .render("capability.md", &ctx)
-        .map_err(|e| crate::error::WiggumError::Template(e.to_string()))?;
+        .map_err(|e| crate::error::MolochError::Template(e.to_string()))?;
     Ok(Some(content))
 }
 

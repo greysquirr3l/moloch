@@ -9,7 +9,7 @@ use std::collections::HashSet;
 use serde::{Deserialize, Serialize};
 
 use crate::domain::plan::{Phase, TaskDef, TaskKind};
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 
 /// Top-level shape the LLM must emit.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -48,7 +48,7 @@ pub struct LlmTask {
 pub fn parse_llm_plan(text: &str) -> Result<LlmPlan> {
     let json = extract_json(text);
     let plan: LlmPlan = serde_json::from_str(&json).map_err(|e| {
-        WiggumError::Validation(format!("LLM plan JSON parse failed: {e}; body={json}"))
+        MolochError::Validation(format!("LLM plan JSON parse failed: {e}; body={json}"))
     })?;
     validate(&plan)?;
     Ok(plan)
@@ -62,18 +62,18 @@ fn validate(plan: &LlmPlan) -> Result<()> {
     for ph in &plan.phases {
         for t in &ph.tasks {
             if t.slug.is_empty() {
-                return Err(WiggumError::Validation(
+                return Err(MolochError::Validation(
                     "LLM plan has a task with empty slug".to_string(),
                 ));
             }
             if !is_kebab_case(&t.slug) {
-                return Err(WiggumError::Validation(format!(
+                return Err(MolochError::Validation(format!(
                     "LLM plan task slug '{slug}' is not kebab-case",
                     slug = t.slug
                 )));
             }
             if !seen_slugs.insert(t.slug.clone()) {
-                return Err(WiggumError::Validation(format!(
+                return Err(MolochError::Validation(format!(
                     "LLM plan has duplicate task slug '{slug}'",
                     slug = t.slug
                 )));
@@ -86,13 +86,13 @@ fn validate(plan: &LlmPlan) -> Result<()> {
         for t in &ph.tasks {
             for dep in &t.depends_on {
                 if !all_slugs.contains(dep) {
-                    return Err(WiggumError::Validation(format!(
+                    return Err(MolochError::Validation(format!(
                         "LLM plan task '{slug}' depends on unknown slug '{dep}'",
                         slug = t.slug
                     )));
                 }
                 if dep == &t.slug {
-                    return Err(WiggumError::Validation(format!(
+                    return Err(MolochError::Validation(format!(
                         "LLM plan task '{slug}' depends on itself",
                         slug = t.slug
                     )));
@@ -148,7 +148,9 @@ pub fn phases_from_llm_plan(llm: &LlmPlan) -> Vec<Phase> {
                     test_hints: Vec::new(),
                     must_haves: Vec::new(),
                     gate: t.gate.clone(),
+                    gate_scope: None,
                     evaluation_criteria: Vec::new(),
+                    verify: Vec::new(),
                     kind: TaskKind::default(),
                     implements: Vec::new(),
                     anchors: Vec::new(),

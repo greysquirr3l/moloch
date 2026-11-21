@@ -5,7 +5,7 @@ use dialoguer::{Confirm, Input, MultiSelect, Select};
 use crate::domain::plan::{
     Language, Orchestrator, Phase, Plan, Preflight, Project, Strategy, TaskDef, TaskKind,
 };
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 
 /// Run the interactive plan creation wizard.
 /// Returns the created Plan and the path where the TOML was saved.
@@ -14,7 +14,7 @@ use crate::error::{Result, WiggumError};
 ///
 /// Returns an error if interactive prompts fail or the plan file cannot be written.
 pub fn run_init(output_plan: Option<&Path>) -> Result<(Plan, PathBuf)> {
-    println!("🦝 wiggum init — interactive plan builder\n");
+    println!("🦝 moloch init — interactive plan builder\n");
 
     let project = prompt_project()?;
     let language = project.language;
@@ -25,7 +25,7 @@ pub fn run_init(output_plan: Option<&Path>) -> Result<(Plan, PathBuf)> {
         .with_prompt("Enable Coraline code intelligence for subagents?")
         .default(true)
         .interact()
-        .map_err(|e| WiggumError::Validation(e.to_string()))?;
+        .map_err(|e| MolochError::Validation(e.to_string()))?;
 
     let phases = prompt_phases()?;
 
@@ -73,12 +73,12 @@ fn prompt_project() -> Result<Project> {
     let name: String = Input::new()
         .with_prompt("Project name")
         .interact_text()
-        .map_err(|e| WiggumError::Validation(e.to_string()))?;
+        .map_err(|e| MolochError::Validation(e.to_string()))?;
 
     let description: String = Input::new()
         .with_prompt("Project description")
         .interact_text()
-        .map_err(|e| WiggumError::Validation(e.to_string()))?;
+        .map_err(|e| MolochError::Validation(e.to_string()))?;
 
     let languages: Vec<String> = Language::ALL.iter().map(ToString::to_string).collect();
     let lang_items: Vec<&str> = languages.iter().map(String::as_str).collect();
@@ -87,7 +87,7 @@ fn prompt_project() -> Result<Project> {
         .items(&lang_items)
         .default(0)
         .interact()
-        .map_err(|e| WiggumError::Validation(e.to_string()))?;
+        .map_err(|e| MolochError::Validation(e.to_string()))?;
     let language = Language::ALL
         .get(lang_idx)
         .copied()
@@ -102,7 +102,7 @@ fn prompt_project() -> Result<Project> {
                 .to_string(),
         )
         .interact_text()
-        .map_err(|e| WiggumError::Validation(e.to_string()))?;
+        .map_err(|e| MolochError::Validation(e.to_string()))?;
 
     let architectures = ["hexagonal", "layered", "modular", "flat", "none"];
     let arch_idx = Select::new()
@@ -110,7 +110,7 @@ fn prompt_project() -> Result<Project> {
         .items(architectures)
         .default(0)
         .interact()
-        .map_err(|e| WiggumError::Validation(e.to_string()))?;
+        .map_err(|e| MolochError::Validation(e.to_string()))?;
     let architecture = match architectures.get(arch_idx) {
         Some(&"none") | None => None,
         Some(val) => Some((*val).to_string()),
@@ -130,7 +130,7 @@ fn prompt_orchestrator(language: Language) -> Result<(String, Vec<String>)> {
         .with_prompt("Subagent persona")
         .default(format!("You are a senior {language} software engineer"))
         .interact_text()
-        .map_err(|e| WiggumError::Validation(e.to_string()))?;
+        .map_err(|e| MolochError::Validation(e.to_string()))?;
 
     let mut rules: Vec<String> = Vec::new();
     println!("\nAdd project rules (empty line to finish):");
@@ -139,7 +139,7 @@ fn prompt_orchestrator(language: Language) -> Result<(String, Vec<String>)> {
             .with_prompt("  Rule")
             .allow_empty(true)
             .interact_text()
-            .map_err(|e| WiggumError::Validation(e.to_string()))?;
+            .map_err(|e| MolochError::Validation(e.to_string()))?;
         if rule.is_empty() {
             break;
         }
@@ -156,7 +156,7 @@ fn prompt_strategy() -> Result<Strategy> {
         .items(strategies)
         .default(0)
         .interact()
-        .map_err(|e| WiggumError::Validation(e.to_string()))?;
+        .map_err(|e| MolochError::Validation(e.to_string()))?;
     Ok(match strategies.get(idx) {
         Some(&"tdd") => Strategy::Tdd,
         Some(&"gsd") => Strategy::Gsd,
@@ -176,7 +176,7 @@ fn prompt_phases() -> Result<Vec<Phase>> {
         let phase_name: String = Input::new()
             .with_prompt(format!("Phase {order} name"))
             .interact_text()
-            .map_err(|e| WiggumError::Validation(e.to_string()))?;
+            .map_err(|e| MolochError::Validation(e.to_string()))?;
 
         let tasks = prompt_tasks_for_phase(&phase_name, &phases)?;
 
@@ -191,7 +191,7 @@ fn prompt_phases() -> Result<Vec<Phase>> {
             .with_prompt("Add another phase?")
             .default(false)
             .interact()
-            .map_err(|e| WiggumError::Validation(e.to_string()))?;
+            .map_err(|e| MolochError::Validation(e.to_string()))?;
         if !more_phases {
             break;
         }
@@ -210,17 +210,17 @@ fn prompt_tasks_for_phase(phase_name: &str, existing_phases: &[Phase]) -> Result
         let slug: String = Input::new()
             .with_prompt("    Slug (kebab-case)")
             .interact_text()
-            .map_err(|e| WiggumError::Validation(e.to_string()))?;
+            .map_err(|e| MolochError::Validation(e.to_string()))?;
 
         let title: String = Input::new()
             .with_prompt("    Title")
             .interact_text()
-            .map_err(|e| WiggumError::Validation(e.to_string()))?;
+            .map_err(|e| MolochError::Validation(e.to_string()))?;
 
         let goal: String = Input::new()
             .with_prompt("    Goal")
             .interact_text()
-            .map_err(|e| WiggumError::Validation(e.to_string()))?;
+            .map_err(|e| MolochError::Validation(e.to_string()))?;
 
         let all_slugs: Vec<String> = existing_phases
             .iter()
@@ -239,7 +239,9 @@ fn prompt_tasks_for_phase(phase_name: &str, existing_phases: &[Phase]) -> Result
             test_hints: Vec::new(),
             must_haves: Vec::new(),
             gate: None,
+            gate_scope: None,
             evaluation_criteria: Vec::new(),
+            verify: Vec::new(),
             kind: TaskKind::default(),
             implements: Vec::new(),
             anchors: Vec::new(),
@@ -251,7 +253,7 @@ fn prompt_tasks_for_phase(phase_name: &str, existing_phases: &[Phase]) -> Result
             .with_prompt("    Add another task to this phase?")
             .default(false)
             .interact()
-            .map_err(|e| WiggumError::Validation(e.to_string()))?;
+            .map_err(|e| MolochError::Validation(e.to_string()))?;
         if !more {
             break;
         }
@@ -269,7 +271,7 @@ fn select_dependencies(all_slugs: &[String]) -> Result<Vec<String>> {
         .with_prompt("    Dependencies (space to toggle, enter to confirm)")
         .items(all_slugs)
         .interact()
-        .map_err(|e| WiggumError::Validation(e.to_string()))?;
+        .map_err(|e| MolochError::Validation(e.to_string()))?;
 
     Ok(selected
         .into_iter()
@@ -279,7 +281,7 @@ fn select_dependencies(all_slugs: &[String]) -> Result<Vec<String>> {
 
 /// Serialize a Plan to pretty TOML string.
 fn serialize_plan_toml(plan: &Plan) -> Result<String> {
-    toml::to_string_pretty(plan).map_err(|e| WiggumError::Validation(e.to_string()))
+    toml::to_string_pretty(plan).map_err(|e| MolochError::Validation(e.to_string()))
 }
 
 /// Check if coraline is installed; offer to install from crates.io if not.

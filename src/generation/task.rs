@@ -1,7 +1,7 @@
 use tera::{Context, Tera};
 
 use crate::domain::plan::{Plan, ResolvedTask};
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 use crate::generation::templates::get_tera;
 
 /// Render a single task file using the default template.
@@ -35,9 +35,11 @@ pub fn render_with(tera: &Tera, plan: &Plan, task: &ResolvedTask) -> Result<Stri
     ctx.insert("test_hints", &task.test_hints);
     ctx.insert("must_haves", &task.must_haves);
     ctx.insert("gate", &task.gate);
+    ctx.insert("gate_scope", &task.effective_gate_scope());
     ctx.insert("strategy", &plan.orchestrator.strategy.to_string());
     ctx.insert("kind", &task.kind.to_string());
     ctx.insert("evaluation_criteria", &task.evaluation_criteria);
+    ctx.insert("verify", &task.verify);
     ctx.insert("avoid_god_files", &plan.style.avoid_god_files);
 
     // Code anchors — serialized so the template can render `path:lines`
@@ -112,7 +114,7 @@ pub fn render_with(tera: &Tera, plan: &Plan, task: &ResolvedTask) -> Result<Stri
     ctx.insert("commit_message", &commit_message);
 
     tera.render("task.md", &ctx)
-        .map_err(|e| WiggumError::Template(e.to_string()))
+        .map_err(|e| MolochError::Template(e.to_string()))
 }
 
 #[cfg(test)]

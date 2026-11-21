@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 
 use super::languages::LanguageProfile;
 use super::targets::TargetSet;
@@ -98,7 +98,7 @@ pub struct TargetConfig {
     /// is present, otherwise `TargetSet::vscode_only()` is used.
     #[serde(default)]
     pub vscode: Option<bool>,
-    /// Emit `.opencode/agents/wiggum-*.md` agent files. Defaults to `false`.
+    /// Emit `.opencode/agents/*.md` agent files. Defaults to `false`.
     #[serde(default)]
     pub opencode: Option<bool>,
     /// Emit `.claude/settings.json` hooks plus `CLAUDE.md` project memory.
@@ -223,7 +223,7 @@ impl EvaluatorConfig {
     ///
     /// # Errors
     ///
-    /// Returns `WiggumError::Validation` if the criteria weights are non-empty
+    /// Returns `MolochError::Validation` if the criteria weights are non-empty
     /// but do not sum to exactly 100.
     pub fn validate(&self) -> crate::error::Result<()> {
         if self.criteria.is_empty() {
@@ -231,7 +231,7 @@ impl EvaluatorConfig {
         }
         let total: u32 = self.criteria.iter().map(|c| u32::from(c.weight)).sum();
         if total != 100 {
-            return Err(WiggumError::Validation(format!(
+            return Err(MolochError::Validation(format!(
                 "evaluator criteria weights must sum to 100, got {total}"
             )));
         }
@@ -323,23 +323,27 @@ pub struct Orchestrator {
     ///   keyword (`auth`, `payment`, `billing`, `crypto`, `credential`,
     ///   `webhook`, `secret`, `key`, `token`, `sign`, `signature`, `kdf`,
     ///   `hash`). See [`auto_derive_require_evaluator`].
-    /// - `Some(true)`: evaluator is mandatory — `wiggum validate`/`generate`
+    /// - `Some(true)`: evaluator is mandatory — `moloch validate`/`generate`
     ///   error if the `[evaluator]` section is absent.
-    /// - `Some(false)`: evaluator explicitly skipped. `wiggum validate`
-    ///   accepts the plan, and `wiggum generate` prints a visible warning
+    /// - `Some(false)`: evaluator explicitly skipped. `moloch validate`
+    ///   accepts the plan, and `moloch generate` prints a visible warning
     ///   when the auto-derive rule would have required one.
     #[serde(default)]
     pub require_evaluator: Option<bool>,
     /// Categories of task that require an explicit human gate before the
-    /// subagent can begin implementation. When empty (the default), wiggum
+    /// subagent can begin implementation. When empty (the default), moloch
     /// auto-derives a list from the resolved task slugs/titles using
     /// [`GATE_KEYWORDS`]. When non-empty, only those categories are
     /// considered gates and every task whose slug or title matches must
     /// declare `gate = "<category>"` in its `TaskDef`; otherwise
-    /// `wiggum validate`/`generate` errors with a message naming the
+    /// `moloch validate`/`generate` errors with a message naming the
     /// missing gate and the affected task.
     #[serde(default)]
     pub gates: Vec<String>,
+    /// Plan-specific situations in which the orchestrator must stop and ask
+    /// the human, rendered after the built-in default list.
+    #[serde(default)]
+    pub stop_when: Vec<String>,
 }
 
 /// Prompt strategy mode controlling task and orchestrator template styles.
@@ -426,10 +430,19 @@ pub struct TaskDef {
     /// message and pause for human confirmation before starting this task.
     #[serde(default)]
     pub gate: Option<String>,
+    /// What the gate's approval covers (task and environment). Rendered in
+    /// the gate banner; a sibling of `gate` so existing plans keep parsing.
+    #[serde(default)]
+    pub gate_scope: Option<String>,
     /// Evaluator exit criteria — each item is a verifiable condition that
     /// must pass before the task can be marked complete.
     #[serde(default)]
     pub evaluation_criteria: Vec<String>,
+    /// Shell commands that must exit zero for the task to count as done.
+    /// Rendered into the task's Exit Criteria and re-run by the
+    /// orchestrator's independent verification step.
+    #[serde(default)]
+    pub verify: Vec<String>,
     /// Task archetype — influences template variant and exit criteria.
     /// Defaults to `feature` when omitted.
     #[serde(default)]
@@ -512,7 +525,7 @@ impl Anchor {
         };
         let raw = raw.trim();
         if raw.is_empty() {
-            return Err(WiggumError::Validation(format!(
+            return Err(MolochError::Validation(format!(
                 "anchor `{}` has an empty `lines` value — omit the field to anchor the whole file",
                 self.path
             )));
@@ -543,12 +556,12 @@ impl Anchor {
 fn parse_line(raw: &str) -> Result<u32> {
     let trimmed = raw.trim();
     let n = trimmed.parse::<u32>().map_err(|_| {
-        WiggumError::Validation(format!(
+        MolochError::Validation(format!(
             "`{trimmed}` is not a line number — use \"42\" or \"42-80\""
         ))
     })?;
     if n == 0 {
-        return Err(WiggumError::Validation(
+        return Err(MolochError::Validation(
             "line numbers are 1-based; `0` is not a valid anchor".to_string(),
         ));
     }
@@ -568,8 +581,12 @@ pub struct ResolvedTask {
     pub must_haves: Vec<String>,
     /// Human-in-the-loop gate message, if any.
     pub gate: Option<String>,
+    /// Scope of the gate's approval, if declared.
+    pub gate_scope: Option<String>,
     /// Evaluator exit criteria carried over from `TaskDef`.
     pub evaluation_criteria: Vec<String>,
+    /// Verification commands carried over from `TaskDef::verify`.
+    pub verify: Vec<String>,
     pub phase_name: String,
     pub phase_order: u32,
     /// Task archetype, propagated from `TaskDef`.
@@ -583,6 +600,17 @@ pub struct ResolvedTask {
 }
 
 impl ResolvedTask {
+    /// The gate scope with surrounding whitespace removed; a blank scope
+    /// counts as absent. Every consumer (banner, lint, diff) goes through
+    /// this so they agree.
+    #[must_use]
+    pub fn effective_gate_scope(&self) -> Option<&str> {
+        self.gate_scope
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+    }
+
     /// Build a resolved task from its definition, stamped with its number
     /// and owning phase.
     fn from_def(task: &TaskDef, number: u32, phase: &Phase) -> Self {
@@ -596,7 +624,9 @@ impl ResolvedTask {
             test_hints: task.test_hints.clone(),
             must_haves: task.must_haves.clone(),
             gate: task.gate.clone(),
+            gate_scope: task.gate_scope.clone(),
             evaluation_criteria: task.evaluation_criteria.clone(),
+            verify: task.verify.clone(),
             phase_name: phase.name.clone(),
             phase_order: phase.order,
             kind: task.kind,
@@ -690,6 +720,7 @@ impl Default for Orchestrator {
             subagent_model: None,
             require_evaluator: None,
             gates: Vec::new(),
+            stop_when: Vec::new(),
         }
     }
 }
@@ -924,7 +955,7 @@ impl Plan {
     ///
     /// # Errors
     ///
-    /// Returns `WiggumError::Validation` on the first violation found,
+    /// Returns `MolochError::Validation` on the first violation found,
     /// listing every offending task so the user can fix all references
     /// in one pass. The check is safe to call with an empty `resolved`
     /// slice — only the duplicate-name check runs in that case.
@@ -940,7 +971,7 @@ impl Plan {
         if !duplicates.is_empty() {
             duplicates.sort_unstable();
             duplicates.dedup();
-            return Err(WiggumError::Validation(format!(
+            return Err(MolochError::Validation(format!(
                 "duplicate capability name(s): {}. Each [[capabilities]] entry must have a unique `name`.",
                 duplicates.join(", ")
             )));
@@ -961,7 +992,7 @@ impl Plan {
             }
         }
         if !offenders.is_empty() {
-            return Err(WiggumError::Validation(format!(
+            return Err(MolochError::Validation(format!(
                 "capability references: {} task(s) reference undefined capabilities:\n  - {}",
                 offenders.len(),
                 offenders.join("\n  - ")
@@ -974,12 +1005,20 @@ impl Plan {
     ///
     /// # Errors
     ///
-    /// Returns `WiggumError::Validation` when the plan's effective
+    /// Returns `MolochError::Validation` when the plan's effective
     /// `require_evaluator` is true but the `[evaluator]` section is missing.
     /// The message names the trigger (task count or security-sensitive slug)
     /// and points at the two ways to resolve it: add an `[evaluator]` block
     /// or opt out with `require_evaluator = false`.
     pub fn validate_gates_and_evaluator(&self, resolved: &[ResolvedTask]) -> Result<()> {
+        for entry in &self.orchestrator.stop_when {
+            if entry.trim().is_empty() || entry.contains('\n') || entry.contains('\r') {
+                return Err(MolochError::Validation(format!(
+                    "invalid [orchestrator] stop_when entry {entry:?}: each entry must be a \
+                     non-empty single line because it is rendered as one bullet"
+                )));
+            }
+        }
         let required = self.effective_require_evaluator(resolved);
         if required && self.evaluator.is_none() {
             let reason = if resolved.len() >= 4 {
@@ -998,10 +1037,10 @@ impl Plan {
                     sensitive.join(", ")
                 )
             };
-            return Err(WiggumError::Validation(format!(
+            return Err(MolochError::Validation(format!(
                 "evaluator required: {reason}, but no [evaluator] section is configured. \
                  Either add an [evaluator] block to the plan, or set `require_evaluator = false` \
-                 in [orchestrator] to opt out (wiggum generate will print a warning)."
+                 in [orchestrator] to opt out (moloch generate will print a warning)."
             )));
         }
         Ok(())
@@ -1031,7 +1070,7 @@ impl Plan {
         let mut seen = std::collections::HashSet::new();
         for t in &resolved {
             if !seen.insert(&t.slug) {
-                return Err(WiggumError::DuplicateSlug(t.slug.clone()));
+                return Err(MolochError::DuplicateSlug(t.slug.clone()));
             }
         }
 
@@ -1041,7 +1080,7 @@ impl Plan {
         for t in &resolved {
             for dep in &t.depends_on {
                 if !all_slugs.contains(dep.as_str()) {
-                    return Err(WiggumError::UnknownDependency {
+                    return Err(MolochError::UnknownDependency {
                         referenced: dep.clone(),
                         referencing: t.slug.clone(),
                     });
@@ -1264,7 +1303,7 @@ pub fn auto_derive_gates(explicit_gates: &[String], phases: &[Phase]) -> Vec<Str
 
 /// Validate gate declarations against the resolved task list.
 ///
-/// Returns `WiggumError::Validation` listing every task whose slug or
+/// Returns `MolochError::Validation` listing every task whose slug or
 /// title matches a gate category but does not declare a matching
 /// `gate = "<category>"` field. Returns `Ok(())` when no gate categories
 /// are configured, or when every gated task carries a matching
@@ -1276,7 +1315,7 @@ pub fn auto_derive_gates(explicit_gates: &[String], phases: &[Phase]) -> Vec<Str
 ///
 /// # Errors
 ///
-/// Returns `WiggumError::Validation` with one line per offending task.
+/// Returns `MolochError::Validation` with one line per offending task.
 pub fn validate_gates(plan: &Plan, resolved: &[ResolvedTask]) -> Result<()> {
     let gates = &plan.orchestrator.gates;
     if gates.is_empty() {
@@ -1313,7 +1352,7 @@ pub fn validate_gates(plan: &Plan, resolved: &[ResolvedTask]) -> Result<()> {
             Some(single) if gates.len() == 1 => format!("\"{single}\""),
             _ => format!("[{}]", gates.join(", ")),
         };
-        return Err(WiggumError::Validation(format!(
+        return Err(MolochError::Validation(format!(
             "gate coverage: {} task(s) require an explicit `gate` declaration matching one of {listed}:\n  - {}",
             offenders.len(),
             offenders.join("\n  - ")
@@ -1330,7 +1369,7 @@ fn security_hardening_task(
     phase_name: String,
     phase_order: u32,
 ) -> ResolvedTask {
-    let depends_on = last_slug.map(|s| vec![s]).unwrap_or_default();
+    let depends_on = last_slug.map_or_default(|s| vec![s]);
 
     ResolvedTask {
         number,
@@ -1382,6 +1421,7 @@ fn security_hardening_task(
             "URL-fetching code validates target against an allowlist".to_string(),
         ],
         gate: None,
+        gate_scope: None,
         evaluation_criteria: vec![
             "No secrets found by grep -r for hardcoded keys, passwords, or tokens".to_string(),
             "Security response headers verified by an integration test or curl assertion"
@@ -1390,6 +1430,7 @@ fn security_hardening_task(
             "File upload test rejects .exe/.sh/.php and oversized files".to_string(),
             "SSRF test confirms internal metadata URLs are blocked".to_string(),
         ],
+        verify: vec![],
         phase_name,
         phase_order,
         kind: TaskKind::Audit,
@@ -1409,7 +1450,7 @@ fn integration_wiring_task(
     phase_order: u32,
     wiring_hints: &[&str],
 ) -> ResolvedTask {
-    let depends_on = last_slug.map(|s| vec![s]).unwrap_or_default();
+    let depends_on = last_slug.map_or_default(|s| vec![s]);
 
     let hints: Vec<String> = wiring_hints.iter().map(|s| (*s).to_string()).collect();
 
@@ -1441,11 +1482,13 @@ fn integration_wiring_task(
             "Configuration values are read and passed to components that need them".to_string(),
         ],
         gate: None,
+        gate_scope: None,
         evaluation_criteria: vec![
             "No dead code: every public function/type is reachable from main or tests".to_string(),
             "Integration test passes exercising the primary user flow end-to-end".to_string(),
             "Manual trace confirms each feature's wiring from entry to implementation".to_string(),
         ],
+        verify: vec![],
         phase_name,
         phase_order,
         kind: TaskKind::Audit,
@@ -1463,7 +1506,7 @@ fn stub_cleanup_task(
     phase_order: u32,
     stub_patterns: &[&str],
 ) -> ResolvedTask {
-    let depends_on = last_slug.map(|s| vec![s]).unwrap_or_default();
+    let depends_on = last_slug.map_or_default(|s| vec![s]);
 
     let pattern_hints: Vec<String> = stub_patterns
         .iter()
@@ -1503,11 +1546,13 @@ fn stub_cleanup_task(
             "All code paths are reachable and functional".to_string(),
         ],
         gate: None,
+        gate_scope: None,
         evaluation_criteria: vec![
             "grep for stub patterns returns zero matches in src/ (excluding tests)".to_string(),
             "All previously-stubbed functions now have real implementations with tests".to_string(),
             "Test suite passes with full coverage of formerly-stubbed code paths".to_string(),
         ],
+        verify: vec![],
         phase_name,
         phase_order,
         kind: TaskKind::Audit,
@@ -1601,7 +1646,7 @@ depends_on = []
     /// to add `[evaluator]` blocks), but the production path in
     /// `cmd_generate` does call this helper. Tests assert on the error
     /// produced by `validate_gates_and_evaluator`.
-    fn parse_and_validate_or_err(toml: &str, context: &str) -> WiggumError {
+    fn parse_and_validate_or_err(toml: &str, context: &str) -> MolochError {
         let plan = match Plan::from_toml(toml) {
             Ok(p) => p,
             Err(e) => panic!("{context}: parse failed: {e}"),
@@ -1621,6 +1666,19 @@ depends_on = []
         match result {
             Ok(v) => v,
             Err(e) => panic!("{context}: expected Ok, got Err({e})"),
+        }
+    }
+
+    #[test]
+    fn stop_when_rejects_blank_and_multiline_entries() {
+        for bad in ["   ", "", "line one\nline two"] {
+            let toml = build_plan(&["alpha"], None, false).replacen(
+                "[orchestrator]\n",
+                &format!("[orchestrator]\nstop_when = [{bad:?}]\n"),
+                1,
+            );
+            let err = parse_and_validate_or_err(&toml, "bad stop_when");
+            assert!(err.to_string().contains("stop_when"), "{err}");
         }
     }
 

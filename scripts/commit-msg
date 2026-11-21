@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Commit-msg hook for wiggum
+# Commit-msg hook for moloch
 # Enforces conventional commit message format
 
 set -e

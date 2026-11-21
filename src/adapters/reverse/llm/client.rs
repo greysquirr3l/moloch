@@ -9,7 +9,7 @@ use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 
 /// Provider enum used by the trait so different wire shapes can share it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -129,22 +129,22 @@ impl AnthropicMessagesClient {
             .json(&req)
             .send()
             .await
-            .map_err(|e| WiggumError::Validation(format!("LLM HTTP request failed: {e}")))?;
+            .map_err(|e| MolochError::Validation(format!("LLM HTTP request failed: {e}")))?;
 
         let status = response.status();
         let body = response
             .text()
             .await
-            .map_err(|e| WiggumError::Validation(format!("read LLM response body: {e}")))?;
+            .map_err(|e| MolochError::Validation(format!("read LLM response body: {e}")))?;
 
         if !status.is_success() {
-            return Err(WiggumError::Validation(format!(
+            return Err(MolochError::Validation(format!(
                 "LLM API returned HTTP {status}: {body}"
             )));
         }
 
         let parsed: MessagesResponse = serde_json::from_str(&body).map_err(|e| {
-            WiggumError::Validation(format!("LLM response JSON parse failed: {e}; body={body}"))
+            MolochError::Validation(format!("LLM response JSON parse failed: {e}; body={body}"))
         })?;
 
         let text = parsed

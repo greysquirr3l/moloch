@@ -1,6 +1,6 @@
 //! Pattern store — save and re-apply reusable plan patterns from retros.
 //!
-//! Patterns are saved as TOML files in `~/.wiggum/patterns/`.
+//! Patterns are saved as TOML files in `~/.moloch/patterns/`.
 //! IDs are derived from the system clock (no `uuid` crate required).
 
 use std::path::{Path, PathBuf};
@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::adapters::retro::RetroSummary;
 use crate::domain::plan::Plan;
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 
 /// A reusable pattern extracted from a retrospective.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -47,10 +47,10 @@ fn new_pattern_id() -> String {
     format!("pat-{ts}")
 }
 
-/// Return the default patterns directory: `~/.wiggum/patterns/`.
+/// Return the default patterns directory: `~/.moloch/patterns/`.
 #[must_use]
 pub fn default_patterns_dir() -> Option<PathBuf> {
-    dirs::home_dir().map(|h| h.join(".wiggum").join("patterns"))
+    dirs::home_dir().map(|h| h.join(".moloch").join("patterns"))
 }
 
 /// List all patterns in `patterns_dir`.
@@ -65,7 +65,7 @@ pub fn list(patterns_dir: &Path) -> Result<Vec<Pattern>> {
 
     let mut patterns = Vec::new();
     let entries = std::fs::read_dir(patterns_dir).map_err(|e| {
-        WiggumError::Io(std::io::Error::new(
+        MolochError::Io(std::io::Error::new(
             e.kind(),
             format!("Cannot read patterns dir {}: {e}", patterns_dir.display()),
         ))
@@ -73,7 +73,7 @@ pub fn list(patterns_dir: &Path) -> Result<Vec<Pattern>> {
 
     for entry in entries {
         let entry = entry.map_err(|e| {
-            WiggumError::Io(std::io::Error::new(
+            MolochError::Io(std::io::Error::new(
                 e.kind(),
                 format!("Cannot read dir entry: {e}"),
             ))
@@ -81,13 +81,13 @@ pub fn list(patterns_dir: &Path) -> Result<Vec<Pattern>> {
         let path = entry.path();
         if path.extension().and_then(|s| s.to_str()) == Some("toml") {
             let content = std::fs::read_to_string(&path).map_err(|e| {
-                WiggumError::Io(std::io::Error::new(
+                MolochError::Io(std::io::Error::new(
                     e.kind(),
                     format!("Cannot read {}: {e}", path.display()),
                 ))
             })?;
             let pattern: Pattern = toml::from_str(&content).map_err(|e| {
-                WiggumError::Validation(format!("Invalid pattern file {}: {e}", path.display()))
+                MolochError::Validation(format!("Invalid pattern file {}: {e}", path.display()))
             })?;
             patterns.push(pattern);
         }
@@ -143,7 +143,7 @@ pub fn save_from_progress(
     patterns_dir: &Path,
 ) -> Result<PathBuf> {
     let content = std::fs::read_to_string(progress_path).map_err(|e| {
-        WiggumError::Io(std::io::Error::new(
+        MolochError::Io(std::io::Error::new(
             e.kind(),
             format!("Cannot read {}: {e}", progress_path.display()),
         ))
@@ -180,7 +180,7 @@ pub fn save_from_progress(
 /// cannot be read.
 pub fn apply(plan_path: &Path, patterns_dir: &Path) -> Result<Vec<String>> {
     let toml_content = std::fs::read_to_string(plan_path).map_err(|e| {
-        WiggumError::Io(std::io::Error::new(
+        MolochError::Io(std::io::Error::new(
             e.kind(),
             format!("Cannot read {}: {e}", plan_path.display()),
         ))
@@ -207,7 +207,7 @@ pub fn apply(plan_path: &Path, patterns_dir: &Path) -> Result<Vec<String>> {
 
 fn write_pattern(pattern: &Pattern, patterns_dir: &Path) -> Result<PathBuf> {
     std::fs::create_dir_all(patterns_dir).map_err(|e| {
-        WiggumError::Io(std::io::Error::new(
+        MolochError::Io(std::io::Error::new(
             e.kind(),
             format!("Cannot create patterns dir {}: {e}", patterns_dir.display()),
         ))
@@ -217,10 +217,10 @@ fn write_pattern(pattern: &Pattern, patterns_dir: &Path) -> Result<PathBuf> {
     let path = patterns_dir.join(&filename);
 
     let serialized = toml::to_string_pretty(&pattern)
-        .map_err(|e| WiggumError::Validation(format!("Failed to serialize pattern: {e}")))?;
+        .map_err(|e| MolochError::Validation(format!("Failed to serialize pattern: {e}")))?;
 
     std::fs::write(&path, &serialized).map_err(|e| {
-        WiggumError::Io(std::io::Error::new(
+        MolochError::Io(std::io::Error::new(
             e.kind(),
             format!("Cannot write {}: {e}", path.display()),
         ))

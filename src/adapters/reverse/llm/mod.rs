@@ -1,4 +1,4 @@
-//! LLM-driven phase decomposition for `wiggum reverse`.
+//! LLM-driven phase decomposition for `moloch reverse`.
 //!
 //! When the user passes `--llm anthropic` (or `--llm minimax`), the reverse
 //! command sends the detected project context (manifest, README, top-level
@@ -68,11 +68,11 @@ impl Provider {
     ///
     /// # Errors
     ///
-    /// Returns `WiggumError::Validation` if neither source is set.
+    /// Returns `MolochError::Validation` if neither source is set.
     pub fn resolve_api_key(self, override_key: Option<&str>) -> Result<String> {
         if let Some(key) = override_key {
             if key.trim().is_empty() {
-                return Err(crate::error::WiggumError::Validation(format!(
+                return Err(crate::error::MolochError::Validation(format!(
                     "--api-key was provided but empty (provider={self:?})"
                 )));
             }
@@ -81,7 +81,7 @@ impl Provider {
         let var = self.api_key_env();
         match std::env::var(var) {
             Ok(key) if !key.trim().is_empty() => Ok(key),
-            _ => Err(crate::error::WiggumError::Validation(format!(
+            _ => Err(crate::error::MolochError::Validation(format!(
                 "no API key for LLM provider {self:?}: set `{var}` or pass --api-key"
             ))),
         }
@@ -113,7 +113,7 @@ pub fn build_client(provider: Provider, api_key: String) -> Arc<dyn LlmClient> {
 /// the parsed plan is returned rather than written into the caller's plan.
 /// Both for the same reason: the client holds the API key, so passing the
 /// scanned project or the plan alongside it in the same call is read as the
-/// key reaching the summary that `wiggum reverse` prints.
+/// key reaching the summary that `moloch reverse` prints.
 ///
 /// # Errors
 ///
@@ -124,7 +124,7 @@ pub async fn decompose_into_plan(
     system_msg: &str,
     user_msg: &str,
 ) -> Result<(LlmResponse, plan_json::LlmPlan)> {
-    let model = std::env::var("WIGGUM_LLM_MODEL").unwrap_or_else(|_| "default".to_string());
+    let model = std::env::var("MOLOCH_LLM_MODEL").unwrap_or_else(|_| "default".to_string());
     let response = client
         .complete(LlmProvider::AnthropicMessages, &model, system_msg, user_msg)
         .await?;

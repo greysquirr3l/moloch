@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install git hooks for wiggum development
+# Install git hooks for moloch development
 
 set -e
 

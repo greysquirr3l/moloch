@@ -1,7 +1,7 @@
 use tera::{Context, Tera};
 
 use crate::domain::plan::{Plan, ResolvedTask};
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 use crate::generation::templates::get_tera;
 
 /// Render the implementation plan document using the default template.
@@ -95,5 +95,5 @@ pub fn render_with(tera: &Tera, plan: &Plan, tasks: &[ResolvedTask]) -> Result<S
     ctx.insert("capabilities", &capabilities_json);
 
     tera.render("plan_doc.md", &ctx)
-        .map_err(|e| WiggumError::Template(e.to_string()))
+        .map_err(|e| MolochError::Template(e.to_string()))
 }

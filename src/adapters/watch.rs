@@ -122,7 +122,7 @@ pub fn render_display<S: std::hash::BuildHasher>(
     // Header
     let _ = writeln!(
         out,
-        "{BOLD}{CYAN}⬡ wiggum watch{RESET} — {BOLD}{}{RESET}\n",
+        "{BOLD}{CYAN}⬡ moloch watch{RESET} — {BOLD}{}{RESET}\n",
         summary.project_name
     );
 
@@ -235,7 +235,7 @@ pub fn run_watch(progress_path: &Path, poll_ms: u64, stall_secs: u64) -> crate::
 
     // Verify file exists before entering loop
     if !progress_path.exists() {
-        return Err(crate::error::WiggumError::Io(io::Error::new(
+        return Err(crate::error::MolochError::Io(io::Error::new(
             io::ErrorKind::NotFound,
             format!("Progress file not found: {}", progress_path.display()),
         )));

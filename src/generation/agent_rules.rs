@@ -11,7 +11,7 @@
 //!
 //! Unlike the `vscode` and `opencode` targets, these files contain **rules
 //! only** — no orchestrator loop, no subagent dispatch, no per-dispatch
-//! model pinning. The receiving IDE drives its own agent loop; wiggum just
+//! model pinning. The receiving IDE drives its own agent loop; moloch just
 //! supplies the security / architecture / style guidance plus project
 //! context.
 //!
@@ -21,7 +21,7 @@
 use tera::{Context, Tera};
 
 use crate::domain::plan::Plan;
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 use crate::generation::templates::get_tera;
 
 /// Render the shared rules content used for `.cursorrules`,
@@ -76,7 +76,7 @@ pub fn render_with(tera: &Tera, plan: &Plan) -> Result<String> {
     }
 
     tera.render("agent_rules.md", &ctx)
-        .map_err(|e| WiggumError::Template(e.to_string()))
+        .map_err(|e| MolochError::Template(e.to_string()))
 }
 
 #[cfg(test)]
@@ -127,7 +127,9 @@ mod tests {
                     test_hints: vec![],
                     must_haves: vec![],
                     gate: None,
+                    gate_scope: None,
                     evaluation_criteria: vec![],
+                    verify: vec![],
                     kind: TaskKind::default(),
                     implements: Vec::new(),
                     anchors: vec![],

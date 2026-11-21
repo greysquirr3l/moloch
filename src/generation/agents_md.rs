@@ -1,7 +1,7 @@
 use tera::{Context, Tera};
 
 use crate::domain::plan::Plan;
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 use crate::generation::templates::get_tera;
 
 /// Render the AGENTS.md file using the default template.
@@ -33,7 +33,7 @@ pub fn render_with(tera: &Tera, plan: &Plan) -> Result<String> {
     ctx.insert("avoid_god_files", &plan.style.avoid_god_files);
 
     tera.render("agents.md", &ctx)
-        .map_err(|e| WiggumError::Template(e.to_string()))
+        .map_err(|e| MolochError::Template(e.to_string()))
 }
 
 #[cfg(test)]
@@ -87,7 +87,9 @@ mod tests {
                     test_hints: vec![],
                     must_haves: vec![],
                     gate: None,
+                    gate_scope: None,
                     evaluation_criteria: vec![],
+                    verify: vec![],
                     kind: TaskKind::default(),
                     implements: Vec::new(),
                     anchors: vec![],

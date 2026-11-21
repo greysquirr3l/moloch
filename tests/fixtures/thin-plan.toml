@@ -4,7 +4,7 @@
 
 [project]
 name        = "thin-test"
-description = "Minimal fixture to verify wiggum generate --thin skips per-tool prompt files."
+description = "Minimal fixture to verify moloch generate --thin skips per-tool prompt files."
 language     = "rust"
 path         = "/tmp/thin-test"
 architecture = "modular"
@@ -19,9 +19,11 @@ persona     = "Test orchestrator."
 strategy    = "standard"
 max_retries = 2
 on_failure  = "pause"
+subagent_model = "claude-sonnet-4.5"
 
 [evaluator]
 persona        = "QA"
+model          = "claude-opus-4.7"
 pass_threshold = 7
 hard_fail      = false
 mode           = "blocking"

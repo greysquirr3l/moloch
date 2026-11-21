@@ -13,12 +13,12 @@
 # is complete. Within each plan, tasks proceed independently in their own order.
 #
 # Usage:
-#   wiggum validate example-workspace/pulsar-core.toml
-#   wiggum validate example-workspace/pulsar-server.toml
-#   wiggum generate example-workspace/pulsar-core.toml  --output output/pulsar-core
-#   wiggum generate example-workspace/pulsar-server.toml --output output/pulsar-server
+#   moloch validate example-workspace/pulsar-core.toml
+#   moloch validate example-workspace/pulsar-server.toml
+#   moloch generate example-workspace/pulsar-core.toml  --output output/pulsar-core
+#   moloch generate example-workspace/pulsar-server.toml --output output/pulsar-server
 #
-# The workspace.toml itself is consumed by tools (e.g. wiggum_draft_plan MCP
+# The workspace.toml itself is consumed by tools (e.g. moloch_draft_plan MCP
 # tool) and CI scripts that need to know the plan execution order.
 
 [workspace]

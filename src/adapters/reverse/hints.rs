@@ -51,7 +51,7 @@ use std::path::Path;
 use serde::Deserialize;
 
 use crate::domain::plan::{FailureAction, Strategy};
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 
 /// Top-level hints container.
 #[derive(Debug, Clone, Default)]
@@ -173,7 +173,7 @@ pub fn parse_hints(text: &str, path: &Path) -> Result<Hints> {
     match ext.as_str() {
         "toml" => parse_toml(text),
         "md" | "markdown" => Ok(parse_markdown(text)),
-        other => Err(WiggumError::Validation(format!(
+        other => Err(MolochError::Validation(format!(
             "unrecognized hints file extension '{other}' (expected .toml, .md, or .markdown)"
         ))),
     }
@@ -181,7 +181,7 @@ pub fn parse_hints(text: &str, path: &Path) -> Result<Hints> {
 
 fn parse_toml(text: &str) -> Result<Hints> {
     let raw: TomlHints = toml::from_str(text)
-        .map_err(|e| WiggumError::Validation(format!("hints TOML parse error: {e}")))?;
+        .map_err(|e| MolochError::Validation(format!("hints TOML parse error: {e}")))?;
 
     let language = raw
         .project
@@ -295,7 +295,7 @@ fn parse_language(s: &str) -> Result<crate::domain::plan::Language> {
         "elixir" => Language::Elixir,
         "php" => Language::Php,
         other => {
-            return Err(WiggumError::Validation(format!(
+            return Err(MolochError::Validation(format!(
                 "unknown language '{other}' in hints.toml"
             )));
         }
@@ -309,7 +309,7 @@ fn parse_strategy(s: &str) -> Result<Strategy> {
         "tdd" => Ok(Strategy::Tdd),
         "gsd" => Ok(Strategy::Gsd),
         "complete" => Ok(Strategy::Complete),
-        other => Err(WiggumError::Validation(format!(
+        other => Err(MolochError::Validation(format!(
             "unknown strategy '{other}' in hints.toml (expected standard|tdd|gsd|complete)"
         ))),
     }
@@ -320,7 +320,7 @@ fn parse_failure_action(s: &str) -> Result<FailureAction> {
         "pause" => Ok(FailureAction::Pause),
         "skip" => Ok(FailureAction::Skip),
         "escalate" => Ok(FailureAction::Escalate),
-        other => Err(WiggumError::Validation(format!(
+        other => Err(MolochError::Validation(format!(
             "unknown on_failure action '{other}' in hints.toml (expected pause|skip|escalate)"
         ))),
     }

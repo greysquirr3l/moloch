@@ -15,20 +15,20 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use wiggum::adapters::reverse::llm::{
+use moloch::adapters::reverse::llm::{
     Provider, client::LlmClient, context, mock::MockLlmClient, plan_json, prompt,
 };
 
-fn empty_plan() -> wiggum::domain::plan::Plan {
-    use wiggum::domain::plan::{
+fn empty_plan() -> moloch::domain::plan::Plan {
+    use moloch::domain::plan::{
         IntegrationConfig, Orchestrator, Preflight, Project, SecurityConfig, StyleConfig,
         TargetConfig,
     };
-    wiggum::domain::plan::Plan {
+    moloch::domain::plan::Plan {
         project: Project {
             name: "demo".to_string(),
             description: "demo project".to_string(),
-            language: wiggum::domain::plan::Language::Rust,
+            language: moloch::domain::plan::Language::Rust,
             path: "<repo>".to_string(),
             architecture: None,
         },
@@ -56,8 +56,8 @@ fn prompt_contains_all_context_sections() {
     std::fs::create_dir_all(dir.path().join("src")).expect("mkdir");
     std::fs::write(dir.path().join("src/lib.rs"), "// lib\n").expect("write lib");
 
-    let scan = wiggum::adapters::bootstrap::ScanResult {
-        language: wiggum::domain::plan::Language::Rust,
+    let scan = moloch::adapters::bootstrap::ScanResult {
+        language: moloch::domain::plan::Language::Rust,
         name: "demo".to_string(),
         description: "demo project".to_string(),
         architecture: None,
@@ -87,8 +87,8 @@ fn prompt_includes_user_hints_when_present() {
     let dir = tempfile::TempDir::new().expect("tempdir");
     std::fs::write(dir.path().join("Cargo.toml"), "[package]\n").expect("write");
 
-    let scan = wiggum::adapters::bootstrap::ScanResult {
-        language: wiggum::domain::plan::Language::Rust,
+    let scan = moloch::adapters::bootstrap::ScanResult {
+        language: moloch::domain::plan::Language::Rust,
         name: "demo".to_string(),
         description: String::new(),
         architecture: None,
@@ -97,9 +97,9 @@ fn prompt_includes_user_hints_when_present() {
         has_ci: false,
     };
 
-    let hints = wiggum::adapters::reverse::hints::Hints {
-        project: wiggum::adapters::reverse::hints::ProjectHints {
-            language: Some(wiggum::domain::plan::Language::Go),
+    let hints = moloch::adapters::reverse::hints::Hints {
+        project: moloch::adapters::reverse::hints::ProjectHints {
+            language: Some(moloch::domain::plan::Language::Go),
             architecture: Some("ddd".to_string()),
             extra_rules: vec!["Use Go 1.23+".to_string()],
             ..Default::default()
@@ -124,7 +124,7 @@ fn mock_client_records_calls() {
     rt.block_on(async {
         client
             .complete(
-                wiggum::adapters::reverse::llm::client::LlmProvider::AnthropicMessages,
+                moloch::adapters::reverse::llm::client::LlmProvider::AnthropicMessages,
                 "test-model",
                 "system-msg",
                 "user-msg",
@@ -133,8 +133,8 @@ fn mock_client_records_calls() {
             .unwrap();
     });
     // Downcast back to the concrete mock to inspect recorded calls.
-    let calls = wiggum::adapters::reverse::llm::mock::MockLlmClient::calls(
-        &wiggum::adapters::reverse::llm::mock::MockLlmClient::default(),
+    let calls = moloch::adapters::reverse::llm::mock::MockLlmClient::calls(
+        &moloch::adapters::reverse::llm::mock::MockLlmClient::default(),
     );
     // The recorded call lives inside the Arc<dyn LlmClient>, which we can't
     // downcast without type_id; assert only that the call didn't error and
@@ -170,7 +170,7 @@ fn mock_client_with_plan_replaces_phases() {
     let response = rt.block_on(async {
         client
             .complete(
-                wiggum::adapters::reverse::llm::client::LlmProvider::AnthropicMessages,
+                moloch::adapters::reverse::llm::client::LlmProvider::AnthropicMessages,
                 "test",
                 "sys",
                 "user",

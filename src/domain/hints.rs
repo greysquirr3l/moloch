@@ -1,5 +1,5 @@
 //! First-command hint formatter — emits the single `Next: ...` line that
-//! wiggum generate prints after the scorecard and warnings.
+//! moloch generate prints after the scorecard and warnings.
 //!
 //! Pure function over `Plan` + `PlanScore`: no filesystem, no IO, easy to
 //! unit-test.
@@ -111,7 +111,9 @@ mod tests {
                     test_hints: vec![],
                     must_haves: vec![],
                     gate: None,
+                    gate_scope: None,
                     evaluation_criteria: vec![],
+                    verify: vec![],
                     kind: TaskKind::default(),
                     implements: Vec::new(),
                     anchors: vec![],

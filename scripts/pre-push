@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Pre-push hook for wiggum
+# Pre-push hook for moloch
 # Runs tests, lints, and build checks before pushing to remote
 
 set -e

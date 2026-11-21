@@ -144,7 +144,7 @@ pub fn render(plan: &Plan, tasks: &[ResolvedTask]) -> Result<String> {
     let _ = writeln!(
         out,
         "Tokens are measured against the cl100k_base-style heuristic used by \
-         `wiggum check`. Tasks above the WARN threshold risk losing detail to \
+         `moloch check`. Tasks above the WARN threshold risk losing detail to \
          context window churn; tasks above CRITICAL will almost certainly \
          truncate."
     );
@@ -278,7 +278,9 @@ mod tests {
             test_hints: vec![],
             must_haves: vec![],
             gate: None,
+            gate_scope: None,
             evaluation_criteria: vec![],
+            verify: vec![],
             phase_name: "P1".into(),
             phase_order: 1,
             kind: crate::domain::plan::TaskKind::default(),
@@ -320,7 +322,9 @@ mod tests {
                     test_hints: vec![],
                     must_haves: vec![],
                     gate: None,
+                    gate_scope: None,
                     evaluation_criteria: vec![],
+                    verify: vec![],
                     kind: crate::domain::plan::TaskKind::default(),
                     implements: Vec::new(),
                     anchors: vec![],

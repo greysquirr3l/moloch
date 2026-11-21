@@ -1,4 +1,4 @@
-//! End-to-end tests for `wiggum reverse`.
+//! End-to-end tests for `moloch reverse`.
 //!
 //! Builds a tiny local git repo + writes hints + invokes the CLI via
 //! `assert_cmd`. Network-free: uses a `file://` URL to point at the local
@@ -92,7 +92,7 @@ fn reverse_against_local_repo_with_hints() {
     let out_path = tmp.path().join("plan.toml");
 
     let url = format!("file://{}", repo.display());
-    Command::cargo_bin("wiggum")
+    Command::cargo_bin("moloch")
         .expect("cargo_bin")
         .env("RUST_LOG", "error")
         .arg("reverse")
@@ -106,7 +106,7 @@ fn reverse_against_local_repo_with_hints() {
 
     let toml = std::fs::read_to_string(&out_path).expect("read plan.toml");
 
-    // Sanity: the generated plan should be parseable by wiggum itself.
+    // Sanity: the generated plan should be parseable by moloch itself.
     let plan: toml::Value = toml::from_str(&toml).expect("parse generated TOML");
     let project = plan.get("project").expect("project section");
     assert_eq!(
@@ -192,7 +192,7 @@ fn reverse_against_local_repo_no_hints() {
     let out_path = tmp.path().join("plan.toml");
     let url = format!("file://{}", repo.display());
 
-    Command::cargo_bin("wiggum")
+    Command::cargo_bin("moloch")
         .expect("cargo_bin")
         .env("RUST_LOG", "error")
         .arg("reverse")
@@ -231,7 +231,7 @@ fn reverse_errors_on_existing_output_without_force() {
     std::fs::write(&out_path, "existing content").expect("write plan.toml");
 
     let url = format!("file://{}", repo.display());
-    Command::cargo_bin("wiggum")
+    Command::cargo_bin("moloch")
         .expect("cargo_bin")
         .env("RUST_LOG", "error")
         .arg("reverse")
@@ -258,7 +258,7 @@ fn reverse_with_force_overwrites_existing_output() {
     std::fs::write(&out_path, "stale content").expect("write plan.toml");
 
     let url = format!("file://{}", repo.display());
-    Command::cargo_bin("wiggum")
+    Command::cargo_bin("moloch")
         .expect("cargo_bin")
         .env("RUST_LOG", "error")
         .arg("reverse")
@@ -276,35 +276,35 @@ fn reverse_with_force_overwrites_existing_output() {
 
 #[test]
 fn reverse_appears_in_cli_help() {
-    // `wiggum --help` lists the `reverse` subcommand.
-    let top_help = Command::cargo_bin("wiggum")
+    // `moloch --help` lists the `reverse` subcommand.
+    let top_help = Command::cargo_bin("moloch")
         .expect("cargo_bin")
         .env("RUST_LOG", "error")
         .arg("--help")
         .output()
-        .expect("invoke wiggum --help");
+        .expect("invoke moloch --help");
     let top_stdout = String::from_utf8_lossy(&top_help.stdout);
     assert!(
         top_stdout.contains("reverse"),
-        "reverse subcommand must appear in `wiggum --help`, got:\n{top_stdout}"
+        "reverse subcommand must appear in `moloch --help`, got:\n{top_stdout}"
     );
 
-    // `wiggum reverse --help` lists the per-subcommand flags.
-    let sub_help = Command::cargo_bin("wiggum")
+    // `moloch reverse --help` lists the per-subcommand flags.
+    let sub_help = Command::cargo_bin("moloch")
         .expect("cargo_bin")
         .env("RUST_LOG", "error")
         .arg("reverse")
         .arg("--help")
         .output()
-        .expect("invoke wiggum reverse --help");
+        .expect("invoke moloch reverse --help");
     let sub_stdout = String::from_utf8_lossy(&sub_help.stdout);
     assert!(
         sub_stdout.contains("--hints"),
-        "--hints flag must appear in `wiggum reverse --help`, got:\n{sub_stdout}"
+        "--hints flag must appear in `moloch reverse --help`, got:\n{sub_stdout}"
     );
     assert!(
         sub_stdout.contains("--keep-tmp"),
-        "--keep-tmp flag must appear in `wiggum reverse --help`, got:\n{sub_stdout}"
+        "--keep-tmp flag must appear in `moloch reverse --help`, got:\n{sub_stdout}"
     );
 }
 
@@ -321,7 +321,7 @@ fn reverse_rejects_bad_hints_extension() {
     let out_path = tmp.path().join("plan.toml");
     let url = format!("file://{}", repo.display());
 
-    Command::cargo_bin("wiggum")
+    Command::cargo_bin("moloch")
         .expect("cargo_bin")
         .env("RUST_LOG", "error")
         .arg("reverse")
@@ -349,7 +349,7 @@ fn reverse_with_subdir_flag_creates_plan() {
     let out_path = tmp.path().join("plan.toml");
     let url = format!("file://{}", repo.display());
 
-    Command::cargo_bin("wiggum")
+    Command::cargo_bin("moloch")
         .expect("cargo_bin")
         .env("RUST_LOG", "error")
         .arg("reverse")
@@ -380,7 +380,7 @@ fn reverse_with_subdir_rejects_empty_subdir() {
     let out_path = tmp.path().join("plan.toml");
     let url = format!("file://{}", repo.display());
 
-    Command::cargo_bin("wiggum")
+    Command::cargo_bin("moloch")
         .expect("cargo_bin")
         .env("RUST_LOG", "error")
         .arg("reverse")
@@ -404,7 +404,7 @@ fn reverse_with_llm_no_api_key_fails() {
     let out_path = tmp.path().join("plan.toml");
     let url = format!("file://{}", repo.display());
 
-    Command::cargo_bin("wiggum")
+    Command::cargo_bin("moloch")
         .expect("cargo_bin")
         .env("RUST_LOG", "error")
         // Clear any ambient keys to make this test hermetic.
@@ -431,7 +431,7 @@ fn reverse_with_unknown_llm_provider_fails() {
     let out_path = tmp.path().join("plan.toml");
     let url = format!("file://{}", repo.display());
 
-    Command::cargo_bin("wiggum")
+    Command::cargo_bin("moloch")
         .expect("cargo_bin")
         .env("RUST_LOG", "error")
         .arg("reverse")
@@ -447,13 +447,13 @@ fn reverse_with_unknown_llm_provider_fails() {
 
 #[test]
 fn reverse_help_documents_llm_flag() {
-    let help = Command::cargo_bin("wiggum")
+    let help = Command::cargo_bin("moloch")
         .expect("cargo_bin")
         .env("RUST_LOG", "error")
         .arg("reverse")
         .arg("--help")
         .output()
-        .expect("invoke wiggum reverse --help");
+        .expect("invoke moloch reverse --help");
     let stdout = String::from_utf8_lossy(&help.stdout);
     assert!(stdout.contains("--llm"));
     assert!(stdout.contains("--llm-model"));

@@ -4,7 +4,7 @@ use dialoguer::{Confirm, Input, MultiSelect};
 use toml_edit::{Array, DocumentMut, Item, Table, Value};
 
 use crate::domain::plan::Plan;
-use crate::error::{Result, WiggumError};
+use crate::error::{MolochError, Result};
 
 /// Interactively add a task to an existing plan TOML file.
 ///
@@ -28,34 +28,34 @@ pub fn run_add_task(plan_path: &Path) -> Result<()> {
     // Parse with toml_edit to preserve formatting
     let mut doc: DocumentMut = content
         .parse()
-        .map_err(|e: toml_edit::TomlError| WiggumError::PlanParse(e.to_string()))?;
+        .map_err(|e: toml_edit::TomlError| MolochError::PlanParse(e.to_string()))?;
 
     // Ask which phase
     let phase_idx = dialoguer::Select::new()
         .with_prompt("Add task to which phase?")
         .items(&phase_names)
         .interact()
-        .map_err(|e| WiggumError::Validation(e.to_string()))?;
+        .map_err(|e| MolochError::Validation(e.to_string()))?;
 
     // Collect task info
     let slug: String = Input::new()
         .with_prompt("Task slug (kebab-case)")
         .interact_text()
-        .map_err(|e| WiggumError::Validation(e.to_string()))?;
+        .map_err(|e| MolochError::Validation(e.to_string()))?;
 
     if existing_slugs.contains(&slug) {
-        return Err(WiggumError::DuplicateSlug(slug));
+        return Err(MolochError::DuplicateSlug(slug));
     }
 
     let title: String = Input::new()
         .with_prompt("Task title")
         .interact_text()
-        .map_err(|e| WiggumError::Validation(e.to_string()))?;
+        .map_err(|e| MolochError::Validation(e.to_string()))?;
 
     let goal: String = Input::new()
         .with_prompt("Task goal")
         .interact_text()
-        .map_err(|e| WiggumError::Validation(e.to_string()))?;
+        .map_err(|e| MolochError::Validation(e.to_string()))?;
 
     let depends_on: Vec<String> = if existing_slugs.is_empty() {
         Vec::new()
@@ -64,7 +64,7 @@ pub fn run_add_task(plan_path: &Path) -> Result<()> {
             .with_prompt("Dependencies (space to toggle, enter to confirm)")
             .items(&existing_slugs)
             .interact()
-            .map_err(|e| WiggumError::Validation(e.to_string()))?;
+            .map_err(|e| MolochError::Validation(e.to_string()))?;
         selected
             .into_iter()
             .filter_map(|i| existing_slugs.get(i).cloned())
@@ -75,7 +75,7 @@ pub fn run_add_task(plan_path: &Path) -> Result<()> {
         .with_prompt("Add implementation hints?")
         .default(false)
         .interact()
-        .map_err(|e| WiggumError::Validation(e.to_string()))?;
+        .map_err(|e| MolochError::Validation(e.to_string()))?;
 
     let hints: Vec<String> = if add_hints {
         collect_lines("  Hint (empty to finish)")?
@@ -87,7 +87,7 @@ pub fn run_add_task(plan_path: &Path) -> Result<()> {
         .with_prompt("Add test hints?")
         .default(false)
         .interact()
-        .map_err(|e| WiggumError::Validation(e.to_string()))?;
+        .map_err(|e| MolochError::Validation(e.to_string()))?;
 
     let test_hints: Vec<String> = if add_test_hints {
         collect_lines("  Test hint (empty to finish)")?
@@ -101,17 +101,17 @@ pub fn run_add_task(plan_path: &Path) -> Result<()> {
     let phases = doc
         .get_mut("phases")
         .and_then(|p| p.as_array_of_tables_mut())
-        .ok_or_else(|| WiggumError::PlanParse("no [[phases]] in plan".to_string()))?;
+        .ok_or_else(|| MolochError::PlanParse("no [[phases]] in plan".to_string()))?;
 
     let phase = phases
         .get_mut(phase_idx)
-        .ok_or_else(|| WiggumError::Validation(format!("phase index {phase_idx} not found")))?;
+        .ok_or_else(|| MolochError::Validation(format!("phase index {phase_idx} not found")))?;
 
     let tasks = phase
         .get_mut("tasks")
         .and_then(|t| t.as_array_of_tables_mut())
         .ok_or_else(|| {
-            WiggumError::PlanParse("no [[phases.tasks]] in selected phase".to_string())
+            MolochError::PlanParse("no [[phases.tasks]] in selected phase".to_string())
         })?;
 
     tasks.push(task_table);
@@ -160,7 +160,7 @@ fn collect_lines(prompt: &str) -> Result<Vec<String>> {
             .with_prompt(prompt)
             .allow_empty(true)
             .interact_text()
-            .map_err(|e| WiggumError::Validation(e.to_string()))?;
+            .map_err(|e| MolochError::Validation(e.to_string()))?;
         if line.is_empty() {
             break;
         }

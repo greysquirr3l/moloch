@@ -2,7 +2,7 @@
 //!
 //! An [`Anchor`] pins a task to a verified `file:line` location in the target
 //! project. This module resolves those locations against the filesystem so
-//! `wiggum validate --lint` can report *drift* — the case where a plan was
+//! `moloch validate --lint` can report *drift* — the case where a plan was
 //! written against code that has since moved, been renamed, or been deleted.
 //!
 //! # Optional by design
@@ -397,7 +397,7 @@ mod tests {
             ],
             ..ResolvedTask::default()
         };
-        let diags = lint_anchors(&[task], Path::new("/nonexistent-wiggum-root"));
+        let diags = lint_anchors(&[task], Path::new("/nonexistent-moloch-root"));
         assert_eq!(diags.len(), 1);
         assert_eq!(diags.first().map(|d| d.rule), Some("anchor-root-missing"));
     }

@@ -4,21 +4,21 @@
 
 | Version | Supported |
 |---------|-----------|
-| 0.7.x   | Yes       |
-| 0.6.x   | Yes       |
-| < 0.6.0 | No        |
+| 0.24.x  | Yes       |
+| 0.23.x  | Yes       |
+| < 0.23.0 | No        |
 
 ## Reporting a vulnerability
 
-If you discover a security vulnerability in Wiggum, please report it responsibly.
+If you discover a security vulnerability in Moloch, please report it responsibly.
 
-**Do not open a public issue.** Instead, use [GitHub's private vulnerability reporting](https://github.com/greysquirr3l/wiggum/security/advisories/new) to submit a report.
+**Do not open a public issue.** Instead, use [GitHub's private vulnerability reporting](https://github.com/greysquirr3l/moloch/security/advisories/new) to submit a report.
 
 You should receive an acknowledgment within 48 hours. We will work with you to understand the issue and coordinate a fix before any public disclosure.
 
 ## Scope
 
-Wiggum is a scaffold generator that reads TOML plan files and writes markdown artifacts. Its security surface includes:
+Moloch is a scaffold generator that reads TOML plan files and writes markdown artifacts. Its security surface includes:
 
 - **Plan file parsing** — TOML deserialization of user-provided input
 - **Template rendering** — Tera template expansion with plan-derived values
@@ -32,10 +32,11 @@ Wiggum is a scaffold generator that reads TOML plan files and writes markdown ar
 - **Automated security analysis** — CodeQL SAST scans on every push and PR
 - **Fuzz testing** — ClusterFuzzLite runs weekly against the TOML plan parser and the Tera template renderers; crashes archive as workflow artifacts
 - **Automated dependency updates** — Dependabot weekly updates with PR reviews; major versions reviewed manually
-- **OSSF Scorecard** — Continuous security posture monitoring; results at <https://api.securityscorecards.dev/projects/github.com/greysquirr3l/wiggum>
+- **OSSF Scorecard** — Continuous security posture monitoring; results at <https://api.securityscorecards.dev/projects/github.com/greysquirr3l/moloch>
 - **Token permissions** — GitHub Actions use minimal required permissions (least privilege)
 - **Release-chain hardening** — Auto-tag runs only after CI succeeds on `main`; release publishing is gated on CI success for the tagged SHA
 - **Dangerous workflow protection** — No `pull_request_target`; `workflow_run` is used only for non-privileged chaining (no token escalation)
+- **Approval-record integrity** — The MCP progress writer rewrites only task rows in task sections. Rows under `## Approvals`, `## Known baseline failures` and `## Session handoff` are left byte-identical, so a recorded human approval cannot be overwritten by a status update
 
 ## Recommendations for maintainers
 
