@@ -1010,7 +1010,7 @@ dependencies = [
 
 [[package]]
 name = "moloch"
-version = "0.23.0"
+version = "0.24.0"
 dependencies = [
  "assert_cmd",
  "async-trait",
