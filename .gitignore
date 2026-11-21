@@ -66,4 +66,7 @@ reference/*
 !reference/example-workspace/**
 
 ai_assisted_development-security.md
+
 .moloch/
+project-docs/
+project-ideas/
